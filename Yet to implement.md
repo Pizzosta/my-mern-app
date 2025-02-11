@@ -10,3 +10,7 @@ this solves bad request 400 among the fields
 * Add additional checks to ensure bids are valid (e.g., minimum bid increment).
 
 THINGS TO FIX
+
+Price isnt working on the update card
+
+we nned to validate the entire update product page
