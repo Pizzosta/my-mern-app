@@ -9,6 +9,7 @@ import {
   FormControl,
   FormLabel,
   FormHelperText,
+  useToast,
 } from "@chakra-ui/react";
 import React from "react";
 import { useProductStore } from "../store/product"; // Import the store
@@ -22,6 +23,9 @@ const CreatePage = () => {
     startTime: "",
     endTime: "",
   });
+
+  const toast = useToast(); // Initialize the toast
+
   const [errors, setErrors] = React.useState({});
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -147,6 +151,13 @@ const CreatePage = () => {
   const handleAddProduct = async () => {
     if (!validateForm()) {
       setIsLoading(false); // Reset loading state
+      toast({
+        title: "Invalid Form",
+        description: "Please provide all required fields.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
       return; // Stop if validation fails
     }
 
@@ -165,16 +176,32 @@ const CreatePage = () => {
       const { success, message } = await createProduct(formattedProduct);
 
       // Log the success and message
-      console.log("Success:", success);
-      console.log("Message:", message);
+      console.log("Success:", success, "Message:", message);
       //console.log(formattedProduct);
 
-      // If the product was created successfully, reset the form
       if (success) {
-        handleReset(); // Reset the form
+        toast({
+          title: "Success",
+          description: message || "Product created successfully!",
+          status: "success",
+          duration: 3000,
+        });
+        handleReset(); // If the product was created successfully, reset the form
+      } else {
+        toast({
+          title: "Error",
+          description: message || "Failed to create product.",
+          status: "error",
+          duration: 3000,
+        });
       }
     } catch (error) {
-      console.error("Error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        status: "error",
+        duration: 3000,
+      });
     } finally {
       setIsLoading(false);
     }
