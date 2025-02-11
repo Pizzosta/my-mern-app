@@ -5,6 +5,8 @@ import CreatePage from "./pages/CreatePage";
 import Navbar from "./components/Navbar";
 import VideoPage from "./pages/VideoPage";
 import { useColorModeValue } from "@chakra-ui/react";
+import "@fontsource/poppins";
+import "@fontsource/roboto";
 
 function App() {
   return (

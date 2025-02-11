@@ -10,5 +10,9 @@ export default defineConfig({
         target: 'http://localhost:5001',
       },
     },
+    fs: {
+      // Allow access to the entire project directory
+      allow: ['..'],
+    },
   }
 });
