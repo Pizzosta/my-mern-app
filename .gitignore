@@ -4,5 +4,6 @@
 # ignore ALL .sh files
 *.sh
 
-# ignore .env file
+# ignore these files
 *.env
+*.DStore
