@@ -6,4 +6,4 @@
 
 # ignore these files
 *.env
-*.DStore
+*.DS_Store
