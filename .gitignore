@@ -1,2 +1,8 @@
 # Editor directories and files
-.vscode/*
+*.vscode/
+
+# ignore ALL .sh files
+*.sh
+
+# ignore .env file
+*.env
