@@ -7,7 +7,7 @@ Lets build an Auction website using MERN
 
 ```shell
 MONGO_URI=your_mongo_uri
-PORT=5000
+PORT=5001
 ```
 
 ### Run this app locally
