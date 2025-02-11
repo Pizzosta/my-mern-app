@@ -63,4 +63,58 @@ export const useProductStore = create((set) => ({
             return { success: false, message: "An unexpected error occurred. Please try again." };
         }
     },
+    fetchProducts: async () => {
+        try {
+            const res = await fetch('/api/products');
+
+            if (!res.ok) { // Check response status first
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Failed to fetch products");
+            }
+
+            const data = await res.json();
+            set({ products: data.data });
+
+        } catch (error) {
+            // Handle network errors
+            console.error("Network error. Please try again.");
+        }
+    },
+    deleteProduct: async (id) => {
+        try {
+            const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+
+            if (res.ok) {
+                set((state) => ({
+                    products: state.products.filter((product) => product._id !== id),
+                }));
+                return { success: true, message: "Product Deleted Successfully" };
+            } else {
+                // Handle HTTP errors
+                return { success: false, message: data.message || "Failed to delete product" };
+            }
+        } catch (error) {
+            // Handle network errors
+            return { success: false, message: "Network error. Please try again." };
+        }
+    },
+    updateProduct: async (pid, updatedProduct) => {
+		const res = await fetch(`/api/products/${pid}`, {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(updatedProduct),
+		});
+		const data = await res.json();
+		if (!data.success) return { success: false, message: data.message };
+
+		// update the ui immediately, without needing a refresh
+		set((state) => ({
+			products: state.products.map((product) => (product._id === pid ? data.data : product)),
+		}));
+
+		return { success: true, message: data.message };
+	},
 }));
