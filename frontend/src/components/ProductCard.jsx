@@ -210,7 +210,7 @@ const ProductCard = ({ product }) => {
       if (success) {
         toast({
           title: "Success",
-          description: message || "Product created successfully!",
+          description: message || "Product Updated successfully!",
           status: "success",
           duration: 3000,
           isClosable: true,
@@ -218,7 +218,7 @@ const ProductCard = ({ product }) => {
       } else {
         toast({
           title: "Error",
-          description: message || "Failed to create product.",
+          description: message || "Failed to Update product.",
           status: "error",
           duration: 3000,
           isClosable: true,

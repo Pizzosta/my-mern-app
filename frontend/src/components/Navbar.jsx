@@ -6,7 +6,6 @@ import {
   Button,
   useColorMode,
 } from "@chakra-ui/react";
-import React from "react";
 import { Link } from "react-router-dom";
 import { FaRegSquarePlus } from "react-icons/fa6";
 import { IoMoon } from "react-icons/io5";
@@ -36,7 +35,7 @@ const Navbar = () => {
             bgClip={"text"}
           >
             {" "}
-            <Link to="/"> Product Store 🛒 </Link>
+            <Link to="/"> KAWODZE 🛒 </Link>
           </Text>
           <HStack spacing={2} alignItems={"center"}>
             <Link to={"/create"}>

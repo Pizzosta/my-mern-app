@@ -1,4 +1,12 @@
- **Field Defaults** : For fields like** **`image`, set a default value in your Mongoose schema instead of relying on user input.
+THINGS TO ADD
+
+
+```
+import { useNavigate } from "react-router-dom";
+```
+
+
+**Field Defaults** : For fields like** **`image`, set a default value in your Mongoose schema instead of relying on user input.
 
 **Validation in** **`createProducts`** and **createVideo** use joi or express-validator
 
