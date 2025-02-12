@@ -99,8 +99,8 @@ export const useProductStore = create((set) => ({
             return { success: false, message: "Network error. Please try again." };
         }
     },
-    updateProduct: async (pid, updatedProduct) => {
-		const res = await fetch(`/api/products/${pid}`, {
+    updateProduct: async (id, updatedProduct) => {
+		const res = await fetch(`/api/products/${id}`, {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json",
@@ -112,7 +112,7 @@ export const useProductStore = create((set) => ({
 
 		// update the ui immediately, without needing a refresh
 		set((state) => ({
-			products: state.products.map((product) => (product._id === pid ? data.data : product)),
+			products: state.products.map((product) => (product._id === id ? data.data : product)),
 		}));
 
 		return { success: true, message: data.message };

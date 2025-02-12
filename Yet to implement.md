@@ -13,4 +13,6 @@ THINGS TO FIX
 
 Price isnt working on the update card
 
-we nned to validate the entire update product page
+we need to validate the entire ()update product page) product card
+
+createpage "textarea"

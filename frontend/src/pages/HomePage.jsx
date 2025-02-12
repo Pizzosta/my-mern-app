@@ -11,6 +11,12 @@ const HomePage = () => {
   }, [fetchProducts]);
   console.log(products);
 
+  // Add this effect to handle external updates
+  useEffect(() => {
+    const interval = setInterval(fetchProducts, 2000); // Fetch every 2 seconds
+    return () => clearInterval(interval);
+  }, [fetchProducts]);
+
   return (
     <Container>
       <VStack spacing={8}>

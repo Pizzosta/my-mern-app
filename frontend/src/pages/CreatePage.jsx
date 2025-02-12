@@ -6,6 +6,7 @@ import {
   useColorModeValue,
   VStack,
   Input,
+  Textarea,
   FormControl,
   FormLabel,
   FormHelperText,
@@ -185,6 +186,7 @@ const CreatePage = () => {
           description: message || "Product created successfully!",
           status: "success",
           duration: 3000,
+          isClosable: true,
         });
         handleReset(); // If the product was created successfully, reset the form
       } else {
@@ -193,6 +195,7 @@ const CreatePage = () => {
           description: message || "Failed to create product.",
           status: "error",
           duration: 3000,
+          isClosable: true,
         });
       }
     } catch (error) {
@@ -201,6 +204,7 @@ const CreatePage = () => {
         description: "An unexpected error occurred.",
         status: "error",
         duration: 3000,
+        isClosable: true,
       });
     } finally {
       setIsLoading(false);
@@ -257,7 +261,7 @@ const CreatePage = () => {
           <FormInput
             label={"Description"}
             placeholder="Description"
-            type="text"
+            type="textarea"
             value={newProduct.description}
             onChange={handleDescriptionChange}
             error={errors.description}
@@ -326,13 +330,17 @@ const FormInput = ({
 }) => (
   <FormControl isInvalid={!!error} isRequired={isRequired}>
     <FormLabel>{label}</FormLabel>
-    <Input
-      placeholder={placeholder}
-      type={type}
-      value={value}
-      onChange={onChange}
-      min={min} // Pass the min attribute
-    />
+    {type === "textarea" ? (
+      <Textarea placeholder={placeholder} value={value} onChange={onChange} />
+    ) : (
+      <Input
+        placeholder={placeholder}
+        type={type}
+        value={value}
+        onChange={onChange}
+        min={min} // Pass the min attribute
+      />
+    )}
     {error && <FormHelperText color={"red.500"}>{error}</FormHelperText>}
   </FormControl>
 );
