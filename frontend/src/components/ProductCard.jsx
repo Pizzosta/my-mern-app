@@ -1,5 +1,6 @@
 import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
 import {
+  Badge,
   Box,
   Button,
   Heading,
@@ -258,17 +259,14 @@ const ProductCard = ({ product }) => {
         <Heading as="h3" size="md" mb={2}>
           {product.name}
         </Heading>
-
-        <Text fontWeight="bold" fontSize="xl" color={textColor} mb={4}>
+        <Text fontSize="sm" color={textColor} mb={4}>
+          {product.description}
+        </Text>
+        <Text fontWeight="bold" fontSize="lg" color="teal.500" mb={4}>
           ${product.price}
         </Text>
-        <Text fontSize="sm" fontWeight="bold" color={textColor} mb={2}>
-          Start Time: {new Date(product.startTime).toLocaleString()}
-        </Text>
-
-        <Text fontSize="sm" fontWeight="bold" color={textColor} mb={2}>
-          End Time: {new Date(product.endTime).toLocaleString()}
-        </Text>
+        <Badge colorScheme="green">Start: {new Date(product.startTime).toLocaleString()}</Badge>
+        <Badge colorScheme="red">End: {new Date(product.endTime).toLocaleString()}</Badge>
 
         <HStack spacing={2}>
           <IconButton icon={<EditIcon />} onClick={onOpen} colorScheme="blue" />
