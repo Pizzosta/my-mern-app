@@ -1,10 +1,12 @@
 THINGS TO ADD
 
-
 ```
 import { useNavigate } from "react-router-dom";
 ```
 
+**Load Only active bids**
+
+Auction Ends you can edit but doesnt reflext on product page
 
 **Field Defaults** : For fields like** **`image`, set a default value in your Mongoose schema instead of relying on user input.
 

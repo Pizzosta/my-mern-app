@@ -20,6 +20,7 @@ const updateAuctionStatuses = async () => {
             endTime: { $lte: now },
         });
         console.log("Ended auctions found:", endedAuctions.length);
+        console.log("Product statuses updated successfully");
 
         for (const auction of endedAuctions) {
             if (auction.bids.length > 0) {

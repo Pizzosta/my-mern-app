@@ -238,6 +238,23 @@ const ProductCard = ({ product }) => {
     }
   };
 
+  // Format helper function
+  const formatTime = (milliseconds) => {
+    if (milliseconds <= 0) return "00:00:00";
+
+    const seconds = Math.floor((milliseconds / 1000) % 60);
+    const minutes = Math.floor((milliseconds / 1000 / 60) % 60);
+    const hours = Math.floor((milliseconds / (1000 * 60 * 60)) % 24);
+    const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
+
+    return [
+      days > 0 ? `${days}d ` : "",
+      `${hours.toString().padStart(2, "0")}:`,
+      `${minutes.toString().padStart(2, "0")}:`,
+      `${seconds.toString().padStart(2, "0")}`,
+    ].join("");
+  };
+
   return (
     <Box
       shadow="lg"
@@ -265,13 +282,17 @@ const ProductCard = ({ product }) => {
         <Text fontWeight="bold" fontSize="lg" color="teal.500" mb={3}>
           GH₵{product.price.toFixed(2)}
         </Text>
-        {/*<p>Time Remaining: {timeRemaining ? `${(timeRemaining / (1000 * 60)).toFixed(2)} minutes` : 'Loading...'}</p>*/}
-          <Badge colorScheme="green">
-            Start: {new Date(product.startTime).toLocaleString()}
-          </Badge>
-          <Badge colorScheme="red">
-            End: {new Date(product.endTime).toLocaleString()}
-          </Badge>
+        {product.status === "ended" ? (
+          <Text color="red.500">Auction Ended</Text>
+        ) : (
+          <Text fontSize="sm" color={textColor} mb={3}>Time Remaining: {formatTime(product.timeRemaining)}</Text>
+        )}
+        <Badge colorScheme="green">
+          Start: {new Date(product.startTime).toLocaleString()}
+        </Badge>
+        <Badge colorScheme="red">
+          End: {new Date(product.endTime).toLocaleString()}
+        </Badge>
         <HStack spacing={2} mt={3}>
           <IconButton icon={<EditIcon />} onClick={onOpen} colorScheme="blue" />
           <IconButton

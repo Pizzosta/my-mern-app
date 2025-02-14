@@ -13,7 +13,7 @@ const HomePage = () => {
 
   // Add this effect to handle external updates
   useEffect(() => {
-    const interval = setInterval(fetchProducts, 2000); // Fetch every 2 seconds
+    const interval = setInterval(fetchProducts, 500); // Fetch every 0.5 seconds (1 seconds = 1000)
     return () => clearInterval(interval);
   }, [fetchProducts]);
 
