@@ -18,7 +18,7 @@ const HomePage = () => {
   }, [fetchProducts]);
 
   return (
-    <Container>
+    <Container maxW="container.xl" centerContent>
       <VStack spacing={8}>
         <Text
           fontSize={"30"}

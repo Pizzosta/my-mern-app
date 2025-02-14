@@ -259,16 +259,20 @@ const ProductCard = ({ product }) => {
         <Heading as="h3" size="md" mb={2}>
           {product.name}
         </Heading>
-        <Text fontSize="sm" color={textColor} mb={4}>
+        <Text noOfLines={2} fontSize="sm" color={textColor} mb={3}>
           {product.description}
         </Text>
-        <Text fontWeight="bold" fontSize="lg" color="teal.500" mb={4}>
-          ${product.price}
+        <Text fontWeight="bold" fontSize="lg" color="teal.500" mb={3}>
+          GH₵{product.price.toFixed(2)}
         </Text>
-        <Badge colorScheme="green">Start: {new Date(product.startTime).toLocaleString()}</Badge>
-        <Badge colorScheme="red">End: {new Date(product.endTime).toLocaleString()}</Badge>
-
-        <HStack spacing={2}>
+        {/*<p>Time Remaining: {timeRemaining ? `${(timeRemaining / (1000 * 60)).toFixed(2)} minutes` : 'Loading...'}</p>*/}
+          <Badge colorScheme="green">
+            Start: {new Date(product.startTime).toLocaleString()}
+          </Badge>
+          <Badge colorScheme="red">
+            End: {new Date(product.endTime).toLocaleString()}
+          </Badge>
+        <HStack spacing={2} mt={3}>
           <IconButton icon={<EditIcon />} onClick={onOpen} colorScheme="blue" />
           <IconButton
             icon={<DeleteIcon />}

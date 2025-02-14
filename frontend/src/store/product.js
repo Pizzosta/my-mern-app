@@ -99,7 +99,7 @@ export const useProductStore = create((set) => ({
             return { success: false, message: "Network error. Please try again." };
         }
     },
-    updateProduct: async (id, updatedProduct) => {
+    /*updateProduct: async (id, updatedProduct) => {
 		const res = await fetch(`/api/products/${id}`, {
 			method: "PUT",
 			headers: {
@@ -117,31 +117,8 @@ export const useProductStore = create((set) => ({
 
 		return { success: true, message: data.message };
 	},
-    /*updateProduct: async (id, updatedProduct) => {
-        try {
-            const res = await fetch(`/api/products/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updatedProduct),
-            });
-            const data = await res.json();
-            if (!data.success) return { success: false, message: data.message };
-
-            // update the ui immediately, without needing a refresh
-            set((state) => ({
-                products: state.products.map((product) => (product._id === id ? data.data : product)),
-            }));
-
-            return { success: true, message: data.message };
-        } catch (error) {
-            // Handle network errors
-            return { success: false, message: "Network error. Please try again." };
-        }
-    },*/
-    // IN product.js (Zustand store)
-    /* updateProduct: async (id, updatedProduct) => {
+    */
+     updateProduct: async (id, updatedProduct) => {
          try {
              const res = await fetch(`/api/products/${id}`, {
                  method: "PUT",
@@ -170,5 +147,5 @@ export const useProductStore = create((set) => ({
                  message: error.message || "Network error. Please try again."
              };
          }
-     },*/
+     },
 }));
