@@ -211,7 +211,7 @@ const ProductCard = ({ product }) => {
       if (success) {
         toast({
           title: "Success",
-          description: message || "Product Updated successfully!",
+          description: message,
           status: "success",
           duration: 3000,
           isClosable: true,
@@ -219,7 +219,7 @@ const ProductCard = ({ product }) => {
       } else {
         toast({
           title: "Error",
-          description: message || "Failed to Update product.",
+          description: message,
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -228,7 +228,7 @@ const ProductCard = ({ product }) => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: error.message,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -283,7 +283,7 @@ const ProductCard = ({ product }) => {
           GH₵{product.price.toFixed(2)}
         </Text>
         {product.status === "ended" ? (
-          <Text color="red.500">Auction Ended</Text>
+          <Text fontWeight="bold" color="red.500" mb={3}>AUCTION ENDED</Text>
         ) : (
           <Text fontSize="sm" color={textColor} mb={3}>Time Remaining: {formatTime(product.timeRemaining)}</Text>
         )}

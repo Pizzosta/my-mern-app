@@ -183,7 +183,7 @@ const CreatePage = () => {
       if (success) {
         toast({
           title: "Success",
-          description: message || "Product created successfully!",
+          description: message,
           status: "success",
           duration: 3000,
           isClosable: true,
@@ -192,7 +192,7 @@ const CreatePage = () => {
       } else {
         toast({
           title: "Error",
-          description: message || "Failed to create product.",
+          description: message,
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -201,7 +201,7 @@ const CreatePage = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: error.message,
         status: "error",
         duration: 3000,
         isClosable: true,

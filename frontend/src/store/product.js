@@ -99,53 +99,34 @@ export const useProductStore = create((set) => ({
             return { success: false, message: "Network error. Please try again." };
         }
     },
-    /*updateProduct: async (id, updatedProduct) => {
-		const res = await fetch(`/api/products/${id}`, {
-			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(updatedProduct),
-		});
-		const data = await res.json();
-		if (!data.success) return { success: false, message: data.message };
+    updateProduct: async (id, updatedProduct) => {
+        try {
+            const res = await fetch(`/api/products/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedProduct)
+            });
 
-		// update the ui immediately, without needing a refresh
-		set((state) => ({
-			products: state.products.map((product) => (product._id === id ? data.data : product)),
-		}));
+            if (!res.ok) throw new Error("Failed to update product");
 
-		return { success: true, message: data.message };
-	},
-    */
-     updateProduct: async (id, updatedProduct) => {
-         try {
-             const res = await fetch(`/api/products/${id}`, {
-                 method: "PUT",
-                 headers: { "Content-Type": "application/json" },
-                 body: JSON.stringify(updatedProduct)
-             });
- 
-             if (!res.ok) throw new Error("Failed to update product");
- 
-             const data = await res.json();
- 
-             set((state) => ({
-                 products: state.products.map(product =>
-                     product._id === id ? data.data : product
-                 )
-             }));
- 
-             return {
-                 success: true,
-                 message: data.message || "Product updated successfully"
-             };
- 
-         } catch (error) {
-             return {
-                 success: false,
-                 message: error.message || "Network error. Please try again."
-             };
-         }
-     },
+            const data = await res.json();
+
+            set((state) => ({
+                products: state.products.map(product =>
+                    product._id === id ? data.data : product
+                )
+            }));
+
+            return {
+                success: true,
+                message: data.message || "Product updated successfully"
+            };
+
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message || "Network error. Please try again."
+            };
+        }
+    },
 }));
