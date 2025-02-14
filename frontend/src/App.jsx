@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar";
 import VideoPage from "./pages/VideoPage";
 import { useColorModeValue } from "@chakra-ui/react";
 import "@fontsource/poppins";
+import Footer from "./components/Footer";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/create" element={<CreatePage />} />
         <Route path="/createvideo" element={<VideoPage />} />
       </Routes>
+      <Footer/>
     </Box>
   );
 }

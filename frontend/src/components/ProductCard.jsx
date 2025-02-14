@@ -287,6 +287,12 @@ const ProductCard = ({ product }) => {
         ) : (
           <Text fontSize="sm" color={textColor} mb={3}>Time Remaining: {formatTime(product.timeRemaining)}</Text>
         )}
+        <Text fontSize="sm" color={textColor} mb={3}>
+          {product.winner ? `Winner: ${product.winner.username}` : "No winner yet"}
+        </Text>
+        <Text fontSize="sm" color={textColor} mb={3}>
+          {product.winner ? `Winning Bid: GH₵${product.currentHighestBid.toFixed(2)}` : "No bids yet"}
+        </Text>
         <Badge colorScheme="green">
           Start: {new Date(product.startTime).toLocaleString()}
         </Badge>
