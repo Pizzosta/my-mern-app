@@ -23,5 +23,5 @@ npm run build
 [](https://github.com/pizzosta/my-mern-app/blob/master/README.md#start-the-app)
 
 ```shell
-npm run start
+npm run dev
 ```
