@@ -4,6 +4,7 @@ import { connectDB } from './config/db.js';
 import productRoutes from "./routes/product.route.js";
 import pvideoRoutes from "./routes/pvideo.route.js";
 import updateAuctionStatuses from './cron/cron.js';
+import userRoutes from "./routes/user.route.js";
 
 
 dotenv.config();
@@ -14,6 +15,8 @@ const PORT = process.env.PORT || 5001;
 app.use(express.json()); // allows to accept JSON data in the req.body
 
 app.use("/api/products", productRoutes);
+
+app.use("/api/users", userRoutes);
 
 app.use("/api/pvideos", pvideoRoutes);
 

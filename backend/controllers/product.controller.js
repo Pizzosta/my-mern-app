@@ -28,11 +28,11 @@ export const createProducts = async (req, res) => {
     const product = req.body;
 
     // Validate required fields
-    if (!product.name || !product.price || !product.description || 
-        !product.image || !product.startTime || !product.endTime) {
+    if (!product.name.trim() || !product.price || !product.description.trim() || 
+        !product.image.trim() || !product.startTime || !product.endTime) {
         return res.status(400).json({
             success: false,
-            message: "Please provide all required fields",
+            message: "All fields (name, price, description, image, startTime, endTime) required.",
         });
     }
 
@@ -45,16 +45,14 @@ export const createProducts = async (req, res) => {
     }
 
     const newProduct = new Product({
-        name: product.name,
+        name: product.name.trim(),
         price: product.price,
-        description: product.description,
-        image: product.image,
+        description: product.description.trim(),
+        image: product.image.trim(),
         startTime: product.startTime,
         endTime: product.endTime,
-        status: "upcoming", // Default status
-        bids: [], // Initialize empty bids array
-        currentHighestBid: 0, // Initialize current highest bid
-        winner: null, // No winner initially
+        //seller: req.user._id, // Set the seller to the logged-in user --> Uncomment this line Best Practice
+        seller: product.seller,
     });
 
     try {
@@ -92,7 +90,7 @@ export const deleteProducts = async (req, res) => {
         }
         res.status(200).json({ 
             success: true, 
-            message: "Product Deleted" 
+            message: "Product Deleted Successfully" 
         });
     } catch (error) {
         console.error("Error in deleting product:", error.message);

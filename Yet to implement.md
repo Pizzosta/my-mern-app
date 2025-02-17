@@ -6,9 +6,13 @@ import { useNavigate } from "react-router-dom";
 
 **Load Only active bids**
 
+sanitize and validate the phone number
+
+Only admin should delete a user
+
 Active bids cant be edited
 
-Auction Ends you can edit but doesnt reflext on product page
+Indexing of the product controllers
 
 **Field Defaults** : For fields like** **`image`, set a default value in your Mongoose schema instead of relying on user input.
 

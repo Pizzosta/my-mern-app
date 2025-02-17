@@ -6,6 +6,7 @@ const productSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      trim: true, // Trim whitespace
     },
     price: {
       type: Number,
@@ -15,10 +16,12 @@ const productSchema = new mongoose.Schema(
     image: {
       type: String,
       required: true,
+      trim: true,
     },
     description: {
       type: String,
       required: true,
+      trim: true,
     },
     startTime: {
       type: Date,
@@ -53,6 +56,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       enum: ["upcoming", "active", "ended"],
       default: "upcoming",
+      index: true,
     },
     seller: {
       type: mongoose.Schema.Types.ObjectId,
@@ -69,7 +73,7 @@ const productSchema = new mongoose.Schema(
         amount: {
           type: Number,
           required: true,
-        },
+          set: (v) => parseFloat(v.toFixed(2)),},
         time: {
           type: Date,
           default: Date.now,
@@ -83,6 +87,7 @@ const productSchema = new mongoose.Schema(
     winner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
   },
   {
