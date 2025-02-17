@@ -14,26 +14,37 @@ export const createUser = async (req, res) => {
       });
     }
 
+    // Email validation
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill a valid email address",
+      });
+    }
+
     const sanitizedEmail = new RegExp(`^${email.trim()}$`, "i"); // Case-insensitive
 
     const sanitizedUsername = new RegExp(`^${username.trim()}$`, "i"); //( Try: username.trim().toLowerCase(); // Trim and convert to lowercase)
 
+    // Phone validation
     let sanitizedPhone;
     let isValidPhone = true;
 
-    if (typeof phone === 'string'|| typeof phone === 'number') {
-      sanitizedPhone = phone.replace(/\D/g, ""); // Remove non-digit characters
-      if (sanitizedPhone.length !== 10) {
-        isValidPhone = false;
-        console.error("Invalid phone number length:", phone);
-      }
-    } else {
+    // Convert to string and remove non-digits
+    sanitizedPhone = phone.toString().replace(/\D/g, "");
+
+    // Validate length
+    if (sanitizedPhone.length !== 10) {
       isValidPhone = false;
-      console.error("Phone number is not a string or number:", phone);
+      console.error("Invalid phone number length:", phone);
     }
 
     if (!isValidPhone) {
-      return res.status(400).json({ success: false, message: "Invalid phone number format" });
+      return res.status(400).json({
+        success: false,
+        message: "Phone number must be 10 digits"
+      });
     }
 
     // Perform asynchronous validation checks in parallel for faster response
@@ -198,6 +209,15 @@ export const updateUser = async (req, res) => {
     return res.status(400).json({
       success: false,
       message: "Invalid User ID"
+    });
+  }
+
+  // Email validation
+  const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+  if (!emailRegex.test(updates.email.trim())) {
+    return res.status(400).json({
+      success: false,
+      message: "Please fill a valid email address",
     });
   }
 
