@@ -6,7 +6,7 @@ export const createUser = async (req, res) => {
     const { firstName, lastName, phone, username, email, password } = req.body;
 
     // Validate required fields
-    if (!firstName.trim() || !lastName.trim() || !phone || !username.trim() || !email.trim() || !password) {
+    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !username.trim() || !email.trim() || !password) {
       return res.status(400).json({
         success: false,
         message:
@@ -32,7 +32,8 @@ export const createUser = async (req, res) => {
     let isValidPhone = true;
 
     // Convert to string and remove non-digits
-    sanitizedPhone = phone.toString().replace(/\D/g, "");
+    const updatedPhone = phone.trim();
+    sanitizedPhone = updatedPhone.toString().replace(/\D/g, "");
 
     // Validate length
     if (sanitizedPhone.length !== 10) {
@@ -132,7 +133,10 @@ export const createUser = async (req, res) => {
         message: `User with this ${duplicateKey} (${duplicateValue}) already exists`,
       });
     }
-
+    // Send MongoDatabase validation error to client
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ success: false, message: error.message });
+    }
     console.error("Error during signup:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
@@ -212,25 +216,37 @@ export const updateUser = async (req, res) => {
     });
   }
 
-  // Email validation
-  const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-  if (!emailRegex.test(updates.email.trim())) {
-    return res.status(400).json({
-      success: false,
-      message: "Please fill a valid email address",
-    });
-  }
-
   // Ensure updates.email and updates.username exist before trimming
   const sanitizedEmail = updates.email?.trim() ? new RegExp(`^${updates.email.trim()}$`, "i") : null; // Case-insensitive
   const sanitizedUsername = updates.username?.trim() ? new RegExp(`^${updates.username.trim()}$`, "i") : null;
+
+  // Phone validation
+  let sanitizedPhone;
+  let isValidPhone = true;
+
+  // Convert to string and remove non-digits
+  const updatedPhone = updates.phone.trim();
+  sanitizedPhone = updatedPhone.toString().replace(/\D/g, "");
+
+  // Validate length
+  if (sanitizedPhone.length !== 10) {
+    isValidPhone = false;
+    console.error("Invalid phone number length:", updates.phone);
+  }
+
+  if (!isValidPhone) {
+    return res.status(400).json({
+      success: false,
+      message: "Phone number must be 10 digits"
+    });
+  }
 
   // Conditional async checks for existing email, username, and phone
   const [existingEmail, existingUsername, existingPhone] = await Promise.all([
     sanitizedEmail ? User.findOne({ email: sanitizedEmail, _id: { $ne: id } }).catch(handleQueryError) : null,
     sanitizedUsername ? User.findOne({ username: sanitizedUsername, _id: { $ne: id } }).catch(handleQueryError) : null,
-    (updates.phone !== undefined) // Explicit check for presence 
-      ? User.findOne({ phone: updates.phone }).catch(handleQueryError) : null,
+    (sanitizedPhone !== undefined) // Explicit check for presence 
+      ? User.findOne({ phone: sanitizedPhone }).catch(handleQueryError) : null,
   ]);
 
   function handleQueryError(err) {
@@ -252,7 +268,7 @@ export const updateUser = async (req, res) => {
       message: "User with this username already exists",
     });
   }
-  if (updates.phone && existingPhone) {
+  if (sanitizedPhone && existingPhone) {
     return res.status(409).json({
       success: false,
       message: "User with this phone number already exists",
@@ -290,7 +306,7 @@ export const updateUser = async (req, res) => {
         message: `User with this ${duplicateKey} (${duplicateValue}) already exists`,
       });
     }
-
+    // Send MongoDatabase validation error to client
     if (error.name === 'ValidationError') {
       return res.status(400).json({ success: false, message: error.message });
     }

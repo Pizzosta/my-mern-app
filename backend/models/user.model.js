@@ -5,22 +5,29 @@ import jwt from "jsonwebtoken";
 const userSchema = new mongoose.Schema(
   {
     firstName: {
-        type: String,
-        required: true,
-        trim: true, // Trim whitespace
+      type: String,
+      required: true,
+      trim: true, // Trim whitespace
     },
     lastName: {
-        type: String,
-        required: true,
-        trim: true,
+      type: String,
+      required: true,
+      trim: true,
     },
     phone: {
-        type: Number,
-        required: true,
-        trim: true,
-        match: [/^\+?[1-9]\d{1,14}$/, "Please fill a valid phone number"],
-        unique: true, // Ensure phone numbers are unique
-        index: true, // Index phone numbers for faster queries  
+      type: String,
+      required: true,
+      trim: true,
+      validate: [
+        {
+          validator: function (v) {
+            return /^\d{10}$/.test(v);
+          },
+          message: "Phone number must be 10 digits"
+        }
+      ],
+      unique: true, // Ensure phone numbers are unique
+      index: true, // Index phone numbers for faster queries  
     },
     username: {
       type: String,
