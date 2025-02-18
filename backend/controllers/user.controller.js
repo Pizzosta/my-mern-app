@@ -85,9 +85,8 @@ export const createUser = async (req, res) => {
         message: "User with this phone number already exists",
       });
     }
-
     // Create new user (password will be hashed by the pre-save hook)
-    const user = new User({
+    const newUser = new User({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       phone: sanitizedPhone,
@@ -98,18 +97,18 @@ export const createUser = async (req, res) => {
     });
 
     // Save user to the database
-    await user.save();
+    await newUser.save();
 
     // Generate tokens
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    const accessToken = newUser.generateAccessToken();
+    const refreshToken = newUser.generateRefreshToken();
 
-    // Update user's refreshToken in the database
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
+    // Update refreshToken and save in a single operation into the Database
+    await User.findByIdAndUpdate(newUser._id, { refreshToken }, { new: true, runValidators: false });
+
 
     // Omit sensitive data from the response
-    const userData = await User.findById(user._id).select("-password -refreshToken");
+    const userData = await User.findById(newUser._id).select("-password -refreshToken");
 
     // Send response with tokens and user data
     res.status(201).json({
@@ -117,10 +116,10 @@ export const createUser = async (req, res) => {
       data: {
         user: userData,
         accessToken,
-        refreshToken,
       },
       message: "User registered successfully",
     });
+    
   } catch (error) {
     // Handle MongoDB duplicate key error (race condition)
     if (error.code === 11000) {

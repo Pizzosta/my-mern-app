@@ -52,7 +52,7 @@ export const useProductStore = create((set) => ({
                 clearTimeout(timeoutId); // Clear the timeout if an error occurs
 
                 if (error.name === 'AbortError') {
-                    return { success: false, message: "Create Request timed out. Please try again." };
+                    return { success: false, message: "Create Product Request timed out. Please try again." };
                 } else {
                     // Handle network errors
                     return { success: false, message: "Network error. Please try again." };
@@ -82,7 +82,7 @@ export const useProductStore = create((set) => ({
         } catch (error) {
             clearTimeout(timeoutId);
             if (error.name === 'AbortError') {
-                return { success: false, message: "Fetch Request timed out. Please try again." };
+                return { success: false, message: "Fetch Products Request timed out. Please try again." };
             } else if (error instanceof Error && error.message.includes('Network Error')) {
                 // Handle network errors
                 return { success: false, message: "Network error. Please try again." };
@@ -116,7 +116,7 @@ export const useProductStore = create((set) => ({
         } catch (error) {
             clearTimeout(timeoutId);
             if (error.name === 'AbortError') {
-                return { success: false, message: "Delete Request timed out. Please try again." };
+                return { success: false, message: "Delete Product Request timed out. Please try again." };
             } else if (error instanceof Error && error.message.includes('Network Error')) {
                 // Handle network errors
                 return { success: false, message: "Network error. Please try again." };
@@ -160,7 +160,7 @@ export const useProductStore = create((set) => ({
             clearTimeout(timeoutId);
 
             if (error.name === 'AbortError') {
-                return { success: false, message: "Update Request timed out. Please try again." };
+                return { success: false, message: "Update Product Request timed out. Please try again." };
             } else if (error instanceof Error && error.message.includes('Network Error')) {
                 // Handle network errors
                 return { success: false, message: "Network error. Please try again." };

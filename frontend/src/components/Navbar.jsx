@@ -38,7 +38,7 @@ const Navbar = () => {
             <Link to="/"> KAWODZE 🛒 </Link>
           </Text>
           <HStack spacing={2} alignItems={"center"}>
-            <Link to={"/login"}>Login</Link>
+            <Link to={"/signup"}>Signup</Link>
             <Link to={"/create"}>
               <Button>
                 <FaRegSquarePlus fontSize={20} />

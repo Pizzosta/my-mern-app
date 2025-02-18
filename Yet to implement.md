@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 
 **Load Only active bids**
 
+Add Bid function to product.js
+
 validate password length
 
 Only admin should delete a user

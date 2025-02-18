@@ -7,6 +7,7 @@ import VideoPage from "./pages/VideoPage";
 import { useColorModeValue } from "@chakra-ui/react";
 import "@fontsource/poppins";
 import Footer from "./components/Footer";
+import SignupPage from "./pages/SignupPage";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/create" element={<CreatePage />} />
         <Route path="/createvideo" element={<VideoPage />} />
+        <Route path="/signup" element={<SignupPage />} />
       </Routes>
       <Footer/>
     </Box>
