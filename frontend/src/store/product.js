@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 
+// Define the timeout duration (5 seconds)
+const REQUEST_TIMEOUT = 5000;
+
 export const useProductStore = create((set) => ({
     products: [],
     setProducts: (products) => set({ products }),
@@ -17,9 +20,6 @@ export const useProductStore = create((set) => ({
                 return { success: false, message: "Please provide all required fields" };
             }
 
-            // Define the timeout duration (5 seconds)
-            const timeoutDuration = 5000;
-
             // Create an AbortController instance
             const controller = new AbortController();
             const { signal } = controller;
@@ -27,7 +27,7 @@ export const useProductStore = create((set) => ({
             // Set a timeout to abort the fetch request if it takes too long
             const timeoutId = setTimeout(() => {
                 controller.abort();
-            }, timeoutDuration);
+            }, REQUEST_TIMEOUT);
 
             try {
                 const res = await fetch('/api/products', {
@@ -52,7 +52,7 @@ export const useProductStore = create((set) => ({
                 clearTimeout(timeoutId); // Clear the timeout if an error occurs
 
                 if (error.name === 'AbortError') {
-                    return { success: false, message: "Request timed out. Please try again." };
+                    return { success: false, message: "Create Request timed out. Please try again." };
                 } else {
                     // Handle network errors
                     return { success: false, message: "Network error. Please try again." };
@@ -64,8 +64,12 @@ export const useProductStore = create((set) => ({
         }
     },
     fetchProducts: async () => {
+        const controller = new AbortController();
+        const { signal } = controller;
+        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
         try {
-            const res = await fetch('/api/products');
+            const res = await fetch('/api/products', { signal });
 
             if (!res.ok) { // Check response status first
                 const errorData = await res.json();
@@ -76,13 +80,28 @@ export const useProductStore = create((set) => ({
             set({ products: data.data });
 
         } catch (error) {
-            // Handle network errors
-            console.error("Network error. Please try again.");
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                return { success: false, message: "Fetch Request timed out. Please try again." };
+            } else if (error instanceof Error && error.message.includes('Network Error')) {
+                // Handle network errors
+                return { success: false, message: "Network error. Please try again." };
+            } else {
+                // Handle other errors
+                return { success: false, message: "An unexpected error occurred. Please try again." };
+            }
         }
     },
     deleteProduct: async (id) => {
+        const controller = new AbortController();
+        const { signal } = controller;
+        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
         try {
-            const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/products/${id}`, { method: 'DELETE', signal });
+
+            clearTimeout(timeoutId);
+
             const data = await res.json();
 
             if (res.ok) {
@@ -95,17 +114,32 @@ export const useProductStore = create((set) => ({
                 return { success: false, message: data.message || "Failed to delete product" };
             }
         } catch (error) {
-            // Handle network errors
-            return { success: false, message: "Network error. Please try again." };
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                return { success: false, message: "Delete Request timed out. Please try again." };
+            } else if (error instanceof Error && error.message.includes('Network Error')) {
+                // Handle network errors
+                return { success: false, message: "Network error. Please try again." };
+            } else {
+                // Handle other errors
+                return { success: false, message: "An unexpected error occurred. Please try again." };
+            }
         }
     },
     updateProduct: async (id, updatedProduct) => {
+        const controller = new AbortController();
+        const { signal } = controller;
+        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
         try {
             const res = await fetch(`/api/products/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(updatedProduct)
+                body: JSON.stringify(updatedProduct),
+                signal
             });
+
+            clearTimeout(timeoutId);
 
             if (!res.ok) throw new Error("Failed to update product");
 
@@ -123,10 +157,17 @@ export const useProductStore = create((set) => ({
             };
 
         } catch (error) {
-            return {
-                success: false,
-                message: error.message || "Network error. Please try again."
-            };
+            clearTimeout(timeoutId);
+
+            if (error.name === 'AbortError') {
+                return { success: false, message: "Update Request timed out. Please try again." };
+            } else if (error instanceof Error && error.message.includes('Network Error')) {
+                // Handle network errors
+                return { success: false, message: "Network error. Please try again." };
+            } else {
+                // Handle other errors
+                return { success: false, message: "An unexpected error occurred. Please try again." };
+            }
         }
     },
 }));

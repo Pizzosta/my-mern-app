@@ -36,19 +36,19 @@ export const updateUser = async (req, res) => {
 
     // 5. Duplicate Checks (same logic as createUser with ID exclusion)
     const [existingEmail, existingUsername, existingPhone] = await Promise.all([
-      updates.email ? User.findOne({ 
-        email: new RegExp(`^${sanitized.email}$`, "i"), 
-        _id: { $ne: id } 
+      updates.email ? User.findOne({
+        email: new RegExp(`^${sanitized.email}$`, "i"),
+        _id: { $ne: id }
       }) : null,
-      
-      updates.username ? User.findOne({ 
-        username: new RegExp(`^${sanitized.username}$`, "i"), 
-        _id: { $ne: id } 
+
+      updates.username ? User.findOne({
+        username: new RegExp(`^${sanitized.username}$`, "i"),
+        _id: { $ne: id }
       }) : null,
-      
-      updates.phone ? User.findOne({ 
-        phone: sanitized.phone, 
-        _id: { $ne: id } 
+
+      updates.phone ? User.findOne({
+        phone: sanitized.phone,
+        _id: { $ne: id }
       }) : null
     ]);
 

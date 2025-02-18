@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 **Load Only active bids**
 
-sanitize and validate the phone number
+validate password length
 
 Only admin should delete a user
 
