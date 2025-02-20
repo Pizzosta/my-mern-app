@@ -430,47 +430,60 @@ const SignupPage = () => {
             error={errors.lastName}
             isRequired
           />
-          <FormControl>
-            <FormInput
-              label={"Password"}
-              placeholder="Password"
-              type={showPassword ? "text" : "password"}
-              value={newUser.password}
-              onChange={handlePasswordChange}
-              error={errors.password}
-              isRequired
-            />
-            <Button
-              variant="ghost"
-              position="absolute"
-              right="2"
-              top="2"
-              onClick={handleShowPassword}
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </Button>
+
+          {/* Password Field */}
+          <FormControl isInvalid={!!errors.password} isRequired>
+            <FormLabel>Password</FormLabel>
+            <InputGroup>
+              <Input
+                placeholder="Password"
+                type={showPassword ? "text" : "password"}
+                value={newUser.password}
+                onChange={handlePasswordChange}
+              />
+              <InputRightElement width="4.5rem">
+                <Button
+                  //variant="ghost"
+                  //position="absolute"
+                  //right="2"
+                  //top="2"
+                  h="1.75rem"
+                  size="sm"
+                  onClick={handleShowPassword}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </Button>
+              </InputRightElement>
+            </InputGroup>
+            {errors.password && (
+              <FormHelperText color="red.500">{errors.password}</FormHelperText>
+            )}
           </FormControl>
-          <InputGroup>
-            {" "}
-            {/* Wrap Input and Button in InputGroup */}
-            <Input
-            label={"Password"}
-            placeholder="Password"
-            type={showPassword ? "text" : "password"}
-            value={newUser.password}
-            onChange={handlePasswordChange}
-            error={errors.password}
-            isRequired
-            />
-            <InputRightElement width="4.5rem">
-              {" "}
-              {/* Position the button */}
-              <Button h="1.75rem" size="sm" onClick={handleShowPassword}>
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </Button>
-            </InputRightElement>
-          </InputGroup>
-          <FormInput
+
+          {/* Confirm Password Field */}
+          <FormControl isInvalid={!!errors.confirmPassword} isRequired>
+            <FormLabel>Confirm Password</FormLabel>
+            <InputGroup>
+              <Input
+                placeholder="Confirm Password"
+                type={showPassword ? "text" : "password"}
+                value={newUser.confirmPassword}
+                onChange={handleConfirmPasswordChange}
+              />
+              <InputRightElement width="4.5rem">
+                <Button h="1.75rem" size="sm" onClick={handleShowPassword}>
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </Button>
+              </InputRightElement>
+            </InputGroup>
+            {errors.confirmPassword && (
+              <FormHelperText color="red.500">
+                {errors.confirmPassword}
+              </FormHelperText>
+            )}
+          </FormControl>
+
+          {/*<FormInput
             label={"ConfrimPassword"}
             placeholder="Confrim Password"
             type={showPassword ? "text" : "password"}
@@ -478,7 +491,7 @@ const SignupPage = () => {
             onChange={handleConfirmPasswordChange}
             error={errors.confirmPassword}
             isRequired
-          />
+          />*/}
           <FormInput
             label={"Username"}
             type="text"
