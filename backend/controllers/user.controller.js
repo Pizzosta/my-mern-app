@@ -13,6 +13,14 @@ export const createUser = async (req, res) => {
           "All fields (firstName, lastName, phone, username, email, password) are required",
       });
     }
+    
+    // Password Validation
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
 
     // Email validation
     const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -119,7 +127,7 @@ export const createUser = async (req, res) => {
       },
       message: "User registered successfully",
     });
-    
+
   } catch (error) {
     // Handle MongoDB duplicate key error (race condition)
     if (error.code === 11000) {

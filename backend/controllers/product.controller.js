@@ -3,36 +3,44 @@ import Product from "../models/product.model.js";
 
 // Helper function to add virtuals to product data
 const formatProductWithVirtuals = (product) => ({
-  ...product.toObject ? product.toObject() : product,
-  timeRemaining: product.timeRemaining
+    ...product.toObject ? product.toObject() : product,
+    timeRemaining: product.timeRemaining
 });
 
 export const getProducts = async (req, res) => {
     try {
-      const products = await Product.find({}).sort({ createdAt: -1 });
-      
-      const formattedProducts = products.map(product => ({
-        ...product.toObject(),
-        timeRemaining: product.timeRemaining,
-        status: product.status
-      }));
-  
-      res.status(200).json({ success: true, data: formattedProducts });
+        const products = await Product.find({}).sort({ createdAt: -1 });
+
+        const formattedProducts = products.map(product => ({
+            ...product.toObject(),
+            timeRemaining: product.timeRemaining,
+            status: product.status
+        }));
+
+        res.status(200).json({ success: true, data: formattedProducts });
     } catch (error) {
-      console.error("Error fetching products:", error);
-      res.status(500).json({ success: false, message: "Server Error" });
+        console.error("Error fetching products:", error);
+        res.status(500).json({ success: false, message: "Server Error" });
     }
-  };
+};
 
 export const createProducts = async (req, res) => {
     const product = req.body;
 
     // Validate required fields
-    if (!product.name.trim() || !product.price || !product.description.trim() || 
+    if (!product.name.trim() || !product.price || !product.description.trim() ||
         !product.image.trim() || !product.startTime || !product.endTime) {
         return res.status(400).json({
             success: false,
             message: "All fields (name, price, description, image, startTime, endTime) required.",
+        });
+    }
+
+    // Ensure startTime is after in the future
+    if (new Date(product.startTime) <= new Date()) {
+        return res.status(400).json({
+            success: false,
+            message: "Start time must be in the future.",
         });
     }
 
@@ -57,15 +65,15 @@ export const createProducts = async (req, res) => {
 
     try {
         await newProduct.save();
-        res.status(201).json({ 
-            success: true, 
-            data: formatProductWithVirtuals(newProduct) 
+        res.status(201).json({
+            success: true,
+            data: formatProductWithVirtuals(newProduct)
         });
     } catch (error) {
         console.error("Error in creating product:", error.message);
-        return res.status(500).json({ 
-            success: false, 
-            message: "Server Error" 
+        return res.status(500).json({
+            success: false,
+            message: "Server Error"
         });
     }
 };
@@ -74,29 +82,29 @@ export const deleteProducts = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ 
-            success: false, 
-            message: "Invalid Product Id" 
+        return res.status(400).json({
+            success: false,
+            message: "Invalid Product Id"
         });
     }
 
     try {
         const deletedProduct = await Product.findByIdAndDelete(id);
         if (!deletedProduct) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "Product not found" 
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
             });
         }
-        res.status(200).json({ 
-            success: true, 
-            message: "Product Deleted Successfully" 
+        res.status(200).json({
+            success: true,
+            message: "Product Deleted Successfully"
         });
     } catch (error) {
         console.error("Error in deleting product:", error.message);
-        res.status(500).json({ 
-            success: false, 
-            message: "Server Error" 
+        res.status(500).json({
+            success: false,
+            message: "Server Error"
         });
     }
 };
@@ -106,14 +114,14 @@ export const updateProducts = async (req, res) => {
     const product = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ 
-            success: false, 
-            message: "Invalid Product Id" 
+        return res.status(400).json({
+            success: false,
+            message: "Invalid Product Id"
         });
     }
 
     // Validate endTime > startTime if both are provided
-    if (product.startTime && product.endTime && 
+    if (product.startTime && product.endTime &&
         new Date(product.endTime) <= new Date(product.startTime)) {
         return res.status(400).json({
             success: false,
@@ -129,21 +137,21 @@ export const updateProducts = async (req, res) => {
         );
 
         if (!updatedProduct) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "Product not found" 
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
             });
         }
 
-        res.status(200).json({ 
-            success: true, 
-            data: formatProductWithVirtuals(updatedProduct) 
+        res.status(200).json({
+            success: true,
+            data: formatProductWithVirtuals(updatedProduct)
         });
     } catch (error) {
         console.error("Error in updating product:", error.message);
-        res.status(500).json({ 
-            success: false, 
-            message: "Server Error" 
+        res.status(500).json({
+            success: false,
+            message: "Server Error"
         });
     }
 };
@@ -153,9 +161,9 @@ export const placeBid = async (req, res) => {
     const { bidder, amount } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ 
-            success: false, 
-            message: "Invalid Product Id" 
+        return res.status(400).json({
+            success: false,
+            message: "Invalid Product Id"
         });
     }
 
@@ -163,9 +171,9 @@ export const placeBid = async (req, res) => {
         const product = await Product.findById(id);
 
         if (!product) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "Product not found" 
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
             });
         }
 
@@ -198,19 +206,19 @@ export const placeBid = async (req, res) => {
 
         // Update the current highest bid
         product.currentHighestBid = amount;
-        
+
         // Save the updated product
         await product.save();
 
-        res.status(200).json({ 
-            success: true, 
-            data: formatProductWithVirtuals(product) 
+        res.status(200).json({
+            success: true,
+            data: formatProductWithVirtuals(product)
         });
     } catch (error) {
         console.error("Error in placing bid:", error.message);
-        res.status(500).json({ 
-            success: false, 
-            message: "Server Error" 
+        res.status(500).json({
+            success: false,
+            message: "Server Error"
         });
     }
 };

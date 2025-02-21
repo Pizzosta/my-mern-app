@@ -12,7 +12,7 @@ validate password length
 
 Only admin should delete a user
 
-Active bids cant be edited
+Active bids cant be edited or deleted
 
 Indexing of the product controllers
 

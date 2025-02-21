@@ -27,8 +27,9 @@ const productSchema = new mongoose.Schema(
       type: Date,
       required: true,
       validate: {
+        // Only validate future dates for upcoming auctions
         validator: function (value) {
-          return value >= Date.now();
+          return this.status !== "upcoming" || value >= Date.now();
         },
         message: "Start time must be in the future.",
       },
@@ -46,7 +47,8 @@ const productSchema = new mongoose.Schema(
         },
         {
           validator: function (value) {
-            return value > Date.now();
+            // Only validate future dates for upcoming auctions
+            return this.status !== "upcoming" || value > Date.now();
           },
           message: "End time must be in the future.",
         },
@@ -73,7 +75,8 @@ const productSchema = new mongoose.Schema(
         amount: {
           type: Number,
           required: true,
-          set: (v) => parseFloat(v.toFixed(2)),},
+          set: (v) => parseFloat(v.toFixed(2)),
+        },
         time: {
           type: Date,
           default: Date.now,
@@ -121,6 +124,7 @@ productSchema.virtual("winnerDetails", {
 });
 
 // Automatic status updates
+/*
 productSchema.pre("save", function (next) {
   const now = Date.now();
   if (this.endTime < now) {
@@ -133,6 +137,33 @@ productSchema.pre("save", function (next) {
   } else if (this.startTime < now) {
     this.status = "active";
   }
+  next();
+});
+*/
+
+productSchema.pre("save", function (next) {
+  const now = Date.now();
+
+  // Only update status for upcoming auctions
+  if (this.status !== "ended") {
+    if (this.startTime <= now && this.status === "upcoming") {
+      this.status = "active";
+    }
+    if (this.endTime <= now) {
+      this.status = "ended";
+    }
+  }
+
+  // Only validate start/end times for upcoming auctions
+  if (this.status == "upcoming") {
+    if (this.startTime <= now) {
+      this.invalidate("startTime", "Start time must be in the future");
+    }
+    if (this.endTime <= now) {
+      this.invalidate("endTime", "End time must be in the future");
+    }
+  }
+
   next();
 });
 
