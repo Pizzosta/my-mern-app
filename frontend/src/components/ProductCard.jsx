@@ -240,7 +240,14 @@ const ProductCard = ({ product }) => {
 
   // Format helper function
   const formatTime = (milliseconds) => {
-    if (milliseconds <= 0) return "00:00:00";
+    //if (milliseconds <= 0) return "00:00:00";
+    if (
+      typeof milliseconds !== "number" ||
+      isNaN(milliseconds) ||
+      milliseconds <= 0
+    ) {
+      return "00:00:00";
+    }
 
     const seconds = Math.floor((milliseconds / 1000) % 60);
     const minutes = Math.floor((milliseconds / 1000 / 60) % 60);
@@ -283,15 +290,30 @@ const ProductCard = ({ product }) => {
           GH₵{product.price.toFixed(2)}
         </Text>
         {product.status === "ended" ? (
-          <Text fontWeight="bold" color="red.500" mb={3}>AUCTION ENDED</Text>
+          <Text fontWeight="bold" color="red.500" mb={3}>
+            AUCTION ENDED
+          </Text>
         ) : (
-          <Text fontSize="sm" color={textColor} mb={3}>Time Remaining: {formatTime(product.timeRemaining)}</Text>
+          <Text fontSize="sm" color={textColor} mb={3}>
+            Time Remaining: {formatTime(product.timeRemaining || 0)}
+          </Text>
         )}
+        {/*
         <Text fontSize="sm" color={textColor} mb={3}>
-          {product.winner ? `Winner: ${product.winner.username}` : "No winner yet"}
+          {product.sellerDetails
+            ? `Auctioneer: ${product.sellerDetails.username}`
+            : "No seller yet"}
+        </Text>}
+        <Text fontSize="sm" color={textColor} mb={3}>
+          {product.winnerDetails
+            ? `Winner: ${product.winnerDetails.username}`
+            : "No winner yet"}
         </Text>
+        */}
         <Text fontSize="sm" color={textColor} mb={3}>
-          {product.winner ? `Winning Bid: GH₵${product.currentHighestBid.toFixed(2)}` : "No bids yet"}
+          {product.winner
+            ? `Winning Bid: GH₵${product.currentHighestBid.toFixed(2)}`
+            : "No bids yet"}
         </Text>
         <Badge colorScheme="green">
           Start: {new Date(product.startTime).toLocaleString()}

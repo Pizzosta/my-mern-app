@@ -53,6 +53,12 @@ const SignupPage = () => {
     return "";
   };
 
+  // Simplified Password validation
+  const validatePassword = (password) => {
+    if (password.length < 6) return "Password should be at least 6 characters";
+    return "";
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -72,6 +78,10 @@ const SignupPage = () => {
     // Phone validation
     const phoneError = validatePhone(newUser.phone);
     if (phoneError) newErrors.phone = phoneError;
+
+    // Password validation
+    const passwordError = validatePassword(newUser.password);
+    if (passwordError) newErrors.password = passwordError;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -127,8 +137,18 @@ const SignupPage = () => {
 
   // Handle password change
   const handlePasswordChange = (e) => {
-    setNewUser({ ...newUser, password: e.target.value });
-    setErrors({ ...errors, password: "" }); // Clear password error
+    const password = e.target.value;
+    setNewUser((prev) => ({
+      ...prev,
+      password,
+    }));
+
+    // Real-time validation
+    const error = validatePassword(password);
+    setErrors((prev) => ({
+      ...prev,
+      password: error,
+    }));
   };
 
   // Confirm password handler
@@ -191,189 +211,6 @@ const SignupPage = () => {
     }
   };
 
-  /*// Validation function
-  const validateForm = () => {
-    const newErrors = {};
-
-    // Firstname validation
-    if (!newUser.firstName.trim()) {
-      newErrors.firstName = "Firstname is required.";
-    }
-
-    // LastName validation
-    if (!newUser.lastName.trim()) {
-      newErrors.lastName = "LastName is required.";
-    }
-
-    // Password validation
-    if (!newUser.password) {
-      newErrors.password = "Password is required.";
-    }
-
-    // ConfirmPassword validation
-    if (newUser.password !== newUser.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match.";
-    }
-
-    // Username validation
-    if (!newUser.username.trim()) {
-      newErrors.username = "Username is required.";
-    }
-
-    // Email validation
-    if (!newUser.email.trim()) {
-      newErrors.email = "Email is required.";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Return true if no errors
-  };
-
-  // Handle Email change
-  const handleEmailChange = (e) => {
-    let value = e.target.value;
-
-    // Real-time validation & checks email format
-    if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(value)) {
-      setNewUser({ ...newUser, email: e.target.value });
-      setErrors({ ...errors, email: "" }); // Clear Email error
-    } else {
-      setErrors({ ...errors, email: "Please fill a valid email address." });
-      return; // Stop execution if invalid
-    }
-
-    //Validation for email
-    if (value.trim() === "") {
-      setErrors({ ...errors, email: "Email is required." });
-    }
-  };
-
-  // Handle Phone input change
-  const handlePhoneChange = (e) => {
-    let value = e.target.value;
-
-    // Real-time validation & checks for only numbers
-    if (/^\d{10}$/.test(value)) {
-      setNewUser({ ...newUser, phone: value });
-      setErrors({ ...errors, phone: "" }); // Clear errors when valid input
-    } else if (!/^\d*$/.test(value)) {
-      setErrors({
-        ...errors,
-        phone: "Phone must be a valid number with not more than 10 digits.",
-      });
-      return;
-    } // Stop execution if non-numeric input
-    else {
-      setErrors({
-        ...errors,
-        phone: "Phone cannot be more than 10 digits.",
-      });
-      return; // Stop execution if invalid
-    }
-
-    //Validation for phone
-    if (value.trim() === "") {
-      setErrors({ ...errors, phone: "Phone is required." });
-    } else if (value.length !== 10) {
-      setErrors({ ...errors, phone: "Phone must be 10 digits." });
-    }
-  };
-
-  // Handle Username change
-  const handleUsernameChange = (e) => {
-    setNewUser({ ...newUser, username: e.target.value });
-    setErrors({ ...errors, username: "" }); // Clear Username error
-  };
-
-  // Handle firstName change
-  const handleFirstnameChange = (e) => {
-    setNewUser({ ...newUser, firstName: e.target.value });
-    setErrors({ ...errors, firstName: "" }); // Clear firstName error
-  };
-
-  // Handle lastName change
-  const handleLastnameChange = (e) => {
-    setNewUser({ ...newUser, lastName: e.target.value });
-    setErrors({ ...errors, lastName: "" }); // Clear lastName error
-  };
-
-  // Handle password change
-  const handlePasswordChange = (e) => {
-    setNewUser({ ...newUser, password: e.target.value });
-    setErrors({ ...errors, password: "" }); // Clear password error
-  };
-
-  // Handle password change
-  const handleConfirmPasswordChange = (e) => {
-    setNewUser({ ...newUser, password: e.target.value });
-    setErrors({ ...errors, password: "" }); // Clear password error
-  };
-
-  // Handle Show password
-  const handleShowPassword = () => setShowPassword(!showPassword);
-
-  const handleAddProduct = async () => {
-    if (!validateForm()) {
-      setIsLoading(false); // Reset loading state
-      toast({
-        title: "Invalid Form",
-        description: "Please provide all required fields.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return; // Stop if validation fails
-    }
-
-    setIsLoading(true);
-    try {
-      // Convert phone to a string and remove non-digits
-      const formattedUser = {
-        ...newUser,
-        phone: toString(newUser.phone).replace(/\D/g, ""),
-      };
-
-      // Ensure phone is a number
-      formattedUser.phone = toString(formattedUser.phone);
-
-      // Call the createUser function from the store
-      const { success, message } = await createUser(formattedUser);
-
-      // Log the success and message
-      console.log("Success:", success, "Message:", message);
-      //console.log(formattedUser);
-
-      if (success) {
-        toast({
-          title: "Success",
-          description: message,
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        handleReset(); // If the user was created successfully, reset the form
-      } else {
-        toast({
-          title: "Error",
-          description: message,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };*/
-
   const handleReset = () => {
     setNewUser({
       firstName: "",
@@ -413,15 +250,6 @@ const SignupPage = () => {
             isRequired
           />
           <FormInput
-            label="Phone"
-            placeholder="10 digit Phone Number"
-            type="text"
-            value={newUser.phone}
-            onChange={handlePhoneChange}
-            error={errors.phone}
-            isRequired
-          />
-          <FormInput
             label={"LastName"}
             placeholder="LastName"
             type="text"
@@ -430,7 +258,31 @@ const SignupPage = () => {
             error={errors.lastName}
             isRequired
           />
-
+          <FormInput
+            label={"Username"}
+            type="text"
+            value={newUser.username}
+            onChange={handleUsernameChange}
+            error={errors.username}
+            isRequired
+          />
+          <FormInput
+            label={"Email"}
+            type="text"
+            value={newUser.email}
+            onChange={handleEmailChange}
+            error={errors.email}
+            isRequired
+          />
+          <FormInput
+            label="Phone"
+            placeholder="10 digit Phone Number"
+            type="text"
+            value={newUser.phone}
+            onChange={handlePhoneChange}
+            error={errors.phone}
+            isRequired
+          />
           {/* Password Field */}
           <FormControl isInvalid={!!errors.password} isRequired>
             <FormLabel>Password</FormLabel>
@@ -443,12 +295,12 @@ const SignupPage = () => {
               />
               <InputRightElement width="4.5rem">
                 <Button
-                  //variant="ghost"
                   //position="absolute"
                   //right="2"
                   //top="2"
                   h="1.75rem"
                   size="sm"
+                  variant="ghost"
                   onClick={handleShowPassword}
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -471,7 +323,7 @@ const SignupPage = () => {
                 onChange={handleConfirmPasswordChange}
               />
               <InputRightElement width="4.5rem">
-                <Button h="1.75rem" size="sm" onClick={handleShowPassword}>
+                <Button h="1.75rem" size="sm" variant="ghost" onClick={handleShowPassword}>
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </Button>
               </InputRightElement>
@@ -482,32 +334,6 @@ const SignupPage = () => {
               </FormHelperText>
             )}
           </FormControl>
-
-          {/*<FormInput
-            label={"ConfrimPassword"}
-            placeholder="Confrim Password"
-            type={showPassword ? "text" : "password"}
-            value={newUser.confirmPassword}
-            onChange={handleConfirmPasswordChange}
-            error={errors.confirmPassword}
-            isRequired
-          />*/}
-          <FormInput
-            label={"Username"}
-            type="text"
-            value={newUser.username}
-            onChange={handleUsernameChange}
-            error={errors.username}
-            isRequired
-          />
-          <FormInput
-            label={"Email"}
-            type="text"
-            value={newUser.email}
-            onChange={handleEmailChange}
-            error={errors.email}
-            isRequired
-          />
           <Button
             colorScheme="blue"
             variant="solid"

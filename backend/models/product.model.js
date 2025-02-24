@@ -103,7 +103,8 @@ const productSchema = new mongoose.Schema(
 // Virtual field for time remaining
 productSchema.virtual("timeRemaining").get(function () {
   if (this.status === "ended") return 0;
-  const remaining = this.endTime - Date.now();
+  const now = Date.now();
+  const remaining = this.endTime - now;
   return remaining > 0 ? remaining : 0;
 });
 
@@ -124,23 +125,6 @@ productSchema.virtual("winnerDetails", {
 });
 
 // Automatic status updates
-/*
-productSchema.pre("save", function (next) {
-  const now = Date.now();
-  if (this.endTime < now) {
-    this.status = "ended";
-    if (this.currentHighestBid > 0) {
-      this.winner = this.bids.reduce((prev, current) =>
-        (prev.amount > current.amount) ? prev : current
-      ).bidder;
-    }
-  } else if (this.startTime < now) {
-    this.status = "active";
-  }
-  next();
-});
-*/
-
 productSchema.pre("save", function (next) {
   const now = Date.now();
 
