@@ -9,7 +9,10 @@ const formatProductWithVirtuals = (product) => ({
 
 export const getProducts = async (req, res) => {
     try {
-        const products = await Product.find({}).sort({ createdAt: -1 });
+        const products = await Product.find({}).sort({ createdAt: -1 })
+        .sort({ createdAt: -1 })
+            .populate('sellerDetails') // Populate seller details
+            .populate('winnerDetails'); // Populate winner details;
 
         const formattedProducts = products.map(product => ({
             ...product.toObject(),

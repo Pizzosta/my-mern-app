@@ -298,18 +298,18 @@ const ProductCard = ({ product }) => {
             Time Remaining: {formatTime(product.timeRemaining || 0)}
           </Text>
         )}
-        {/*
+        
         <Text fontSize="sm" color={textColor} mb={3}>
           {product.sellerDetails
             ? `Auctioneer: ${product.sellerDetails.username}`
             : "No seller yet"}
-        </Text>}
+        </Text>
         <Text fontSize="sm" color={textColor} mb={3}>
           {product.winnerDetails
             ? `Winner: ${product.winnerDetails.username}`
             : "No winner yet"}
         </Text>
-        */}
+        
         <Text fontSize="sm" color={textColor} mb={3}>
           {product.winner
             ? `Winning Bid: GH₵${product.currentHighestBid.toFixed(2)}`
