@@ -13,7 +13,7 @@ export const createUser = async (req, res) => {
           "All fields (firstName, lastName, phone, username, email, password) are required",
       });
     }
-    
+
     // Password Validation
     if (password.length < 6) {
       return res.status(400).json({
@@ -40,7 +40,12 @@ export const createUser = async (req, res) => {
     let isValidPhone = true;
 
     // Convert to string and remove non-digits
-    sanitizedPhone = phone.toString().replace(/\D/g, "");
+    sanitizedPhone = String(phone).replace(/\D/g, "");
+
+    // Add zero-padding if needed (optional safety)
+    if (sanitizedPhone.length === 9) {
+      sanitizedPhone = `0${sanitizedPhone}`;
+    }
 
     // Validate length
     if (sanitizedPhone.length !== 10) {
@@ -63,7 +68,6 @@ export const createUser = async (req, res) => {
     ]);
 
     // Error handling for query errors 
-    // prevents Promise.all from rejecting entirely if one of the queries fails.
     function handleQueryError(err) {
       console.error("Error during user check:", err);
       return null;
