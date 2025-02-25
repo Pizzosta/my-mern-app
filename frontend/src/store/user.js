@@ -4,7 +4,7 @@ import { create } from "zustand";
 const REQUEST_TIMEOUT = 5000;
 
 export const useUserStore = create((set) => ({
-    users: null,
+    users: [],
     setUsers: (users) => set({ users }),
     createUser: async (newUser) => {
         try {
@@ -30,7 +30,7 @@ export const useUserStore = create((set) => ({
             }, REQUEST_TIMEOUT);
 
             try {
-                const res = await fetch("/api/users", {
+                const res = await fetch("/api/users/signup", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newUser),
@@ -62,6 +62,113 @@ export const useUserStore = create((set) => ({
             return { success: false, message: "An unexpected error occurred. Please try again." };
         }
     },
+    /*
+    fetchUsers: async () => {
+        const controller = new AbortController();
+        const { signal } = controller;
+        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+        try {
+            const res = await fetch('/api/users', { signal });
+
+            if (!res.ok) { // Check response status first
+                const errorData = await res.json();
+                throw new Error(errorData.message || "Failed to fetch users");
+            }
+
+            const data = await res.json();
+            set({ products: data.data });
+        } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                return { success: false, message: "Fetch Users Request timed out. Please try again." };
+            } else if (error instanceof Error && error.message.includes('Network Error')) {
+                // Handle network errors
+                return { success: false, message: "Network error. Please try again." };
+            } else {
+                // Handle other errors
+                return { success: false, message: "An unexpected error occurred. Please try again." };
+            }
+        }
+    },
+    deleteUser: async (id) => {
+        const controller = new AbortController();
+        const { signal } = controller;
+        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+        try {
+            const res = await fetch(`/api/users/${id}`, { method: 'DELETE', signal });
+
+            clearTimeout(timeoutId);
+
+            const data = await res.json();
+
+            if (res.ok) {
+                set((state) => ({
+                    users: state.users.filter((user) => user._id !== id),
+                }));
+                return { success: true, message: "User Deleted Successfully" };
+            } else {
+                // Handle HTTP errors
+                return { success: false, message: data.message || "Failed to delete user" };
+            }
+        } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                return { success: false, message: "Delete User Request timed out. Please try again." };
+            } else if (error instanceof Error && error.message.includes('Network Error')) {
+                // Handle network errors
+                return { success: false, message: "Network error. Please try again." };
+            } else {
+                // Handle other errors
+                return { success: false, message: "An unexpected error occurred. Please try again." };
+            }
+        }
+    },
+    updateUser: async (id, updatedUser) => {
+        const controller = new AbortController();
+        const { signal } = controller;
+        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+        try {
+            const res = await fetch(`/api/users/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedUser),
+                signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!res.ok) throw new Error("Failed to update user");
+
+            const data = await res.json();
+
+            set((state) => ({
+                products: state.products.map(product =>
+                    product._id === id ? data.data : product
+                )
+            }));
+
+            return {
+                success: true,
+                message: data.message || "User updated successfully"
+            };
+
+        } catch (error) {
+            clearTimeout(timeoutId);
+
+            if (error.name === 'AbortError') {
+                return { success: false, message: "Update User Request timed out. Please try again." };
+            } else if (error instanceof Error && error.message.includes('Network Error')) {
+                // Handle network errors
+                return { success: false, message: "Network error. Please try again." };
+            } else {
+                // Handle other errors
+                return { success: false, message: "An unexpected error occurred. Please try again." };
+            }
+        }
+    },*/
 
     /*login: async (credentials) => {
         try {

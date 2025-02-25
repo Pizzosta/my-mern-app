@@ -78,6 +78,20 @@ export const useProductStore = create((set) => ({
 
             const data = await res.json();
             set({ products: data.data });
+            /*
+                        const productsWithUsers = data.data.map(product => ({
+                            ...product,
+                            winner: product.winner ? {
+                                id: product.winner._id,
+                                username: product.winner.username
+                            } : null,
+                            seller: product.seller ? {
+                                id: product.seller._id,
+                                username: product.seller.username
+                            } : null
+                        }));
+                        set({ products: productsWithUsers});
+                        */
 
         } catch (error) {
             clearTimeout(timeoutId);

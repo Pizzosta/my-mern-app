@@ -16,7 +16,7 @@ import {
 } from "@chakra-ui/react";
 import React from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../store/user"; // Import the store
 
 const SignupPage = () => {
@@ -27,7 +27,6 @@ const SignupPage = () => {
     username: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
 
   const toast = useToast(); // Initialize the toast
@@ -37,11 +36,12 @@ const SignupPage = () => {
   const [showPassword, setShowPassword] = React.useState(false);
 
   const { createUser } = useUserStore(); // Destructure createUser from the store
+  const navigate = useNavigate();
 
   // Simplified phone validation
   const validatePhone = (phone) => {
     const cleaned = phone.replace(/\D/g, "");
-    if (cleaned.length !== 10) return "Phone must be 10 digits";
+    if (cleaned.length !== 10) return "Phone must be 10 digits frontend";
     if (!/^\d+$/.test(cleaned)) return "Only numbers allowed";
     return "";
   };
@@ -163,7 +163,7 @@ const SignupPage = () => {
   // Handle Show password
   const handleShowPassword = () => setShowPassword(!showPassword);
 
-  const handleAddProduct = async () => {
+  const handleSignup = async () => {
     if (!validateForm()) {
       toast({
         title: "Validation Error",
@@ -178,7 +178,7 @@ const SignupPage = () => {
     try {
       const formattedUser = {
         ...newUser,
-        phone: parseInt(newUser.phone, 10), // Convert to number
+        phone: parseFloat(newUser.phone),
       };
 
       const { success, message } = await createUser(formattedUser);
@@ -190,7 +190,7 @@ const SignupPage = () => {
           status: "success",
           duration: 3000,
         });
-        handleReset();
+        navigate("/");
       } else {
         toast({
           title: "Error",
@@ -242,7 +242,6 @@ const SignupPage = () => {
         <VStack spacing={4}>
           <FormInput
             label="Firstname"
-            placeholder="Firstname"
             type="text"
             value={newUser.firstName}
             onChange={handleFirstnameChange}
@@ -251,7 +250,6 @@ const SignupPage = () => {
           />
           <FormInput
             label={"LastName"}
-            placeholder="LastName"
             type="text"
             value={newUser.lastName}
             onChange={handleLastnameChange}
@@ -288,16 +286,12 @@ const SignupPage = () => {
             <FormLabel>Password</FormLabel>
             <InputGroup>
               <Input
-                placeholder="Password"
                 type={showPassword ? "text" : "password"}
                 value={newUser.password}
                 onChange={handlePasswordChange}
               />
               <InputRightElement width="4.5rem">
                 <Button
-                  //position="absolute"
-                  //right="2"
-                  //top="2"
                   h="1.75rem"
                   size="sm"
                   variant="ghost"
@@ -317,7 +311,6 @@ const SignupPage = () => {
             <FormLabel>Confirm Password</FormLabel>
             <InputGroup>
               <Input
-                placeholder="Confirm Password"
                 type={showPassword ? "text" : "password"}
                 value={newUser.confirmPassword}
                 onChange={handleConfirmPasswordChange}
@@ -337,7 +330,7 @@ const SignupPage = () => {
           <Button
             colorScheme="blue"
             variant="solid"
-            onClick={handleAddProduct}
+            onClick={handleSignup}
             isLoading={isLoading}
             loadingText="Creating..."
             w={"full"}

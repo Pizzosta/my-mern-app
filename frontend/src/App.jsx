@@ -15,9 +15,9 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route path="/create" element={<CreatePage />} />
         <Route path="/createvideo" element={<VideoPage />} />
-        <Route path="/signup" element={<SignupPage />} />
       </Routes>
       <Footer/>
     </Box>

@@ -6,7 +6,7 @@ export const createUser = async (req, res) => {
     const { firstName, lastName, phone, username, email, password } = req.body;
 
     // Validate required fields
-    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !username.trim() || !email.trim() || !password) {
+    if (!firstName.trim() || !lastName.trim() || !phone || !username.trim() || !email.trim() || !password) {
       return res.status(400).json({
         success: false,
         message:
@@ -40,8 +40,7 @@ export const createUser = async (req, res) => {
     let isValidPhone = true;
 
     // Convert to string and remove non-digits
-    const updatedPhone = phone.trim();
-    sanitizedPhone = updatedPhone.toString().replace(/\D/g, "");
+    sanitizedPhone = phone.toString().replace(/\D/g, "");
 
     // Validate length
     if (sanitizedPhone.length !== 10) {

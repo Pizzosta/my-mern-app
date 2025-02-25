@@ -298,7 +298,7 @@ const ProductCard = ({ product }) => {
             Time Remaining: {formatTime(product.timeRemaining || 0)}
           </Text>
         )}
-        
+
         <Text fontSize="sm" color={textColor} mb={3}>
           {product.sellerDetails
             ? `Auctioneer: ${product.sellerDetails.username}`
@@ -309,10 +309,11 @@ const ProductCard = ({ product }) => {
             ? `Winner: ${product.winnerDetails.username}`
             : "No winner yet"}
         </Text>
-        
         <Text fontSize="sm" color={textColor} mb={3}>
-          {product.winner
+          {product.status === "ended" && product.winner
             ? `Winning Bid: GH₵${product.currentHighestBid.toFixed(2)}`
+            : product.currentHighestBid > product.price
+            ? `Current Highest Bid: GH₵${product.currentHighestBid.toFixed(2)}`
             : "No bids yet"}
         </Text>
         <Badge colorScheme="green">
