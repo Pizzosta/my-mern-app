@@ -1,11 +1,12 @@
 import express from "express";
 import { createProducts, deleteProducts, getProducts, updateProducts, placeBid } from "../controllers/product.controller.js";
+import { verifyJWT } from "../cron/middleware/auth.middleware.js";
 
 const router = express.Router();
 
 router.get("/", getProducts);
-router.post("/", createProducts);
-router.delete("/:id", deleteProducts);
+router.post("/", verifyJWT, createProducts);
+router.delete("/:id", verifyJWT, deleteProducts);
 router.put("/:id", updateProducts);
 router.post("/:id/bid", placeBid);
 

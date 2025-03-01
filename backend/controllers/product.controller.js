@@ -68,8 +68,7 @@ export const createProducts = async (req, res) => {
         image: product.image.trim(),
         startTime: product.startTime,
         endTime: product.endTime,
-        //seller: req.user._id, // Set the seller to the logged-in user --> Uncomment this line Best Practice
-        seller: product.seller,
+        seller: req.user._id, // Set the seller to the logged-in user --> Uncomment this line Best Practice
     });
 
     try {

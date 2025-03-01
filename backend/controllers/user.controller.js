@@ -1,6 +1,26 @@
 import User from "../models/user.model.js";
 import mongoose from "mongoose";
 
+// Define cookie options at module scope
+// Updated cookie options for local development
+const cookieOptions = {
+  httpOnly: true,
+  secure: false, // Disable secure in development (HTTP)
+  sameSite: 'lax', // Less strict than 'strict'
+  maxAge: 7 * 24 * 60 * 60 * 1000
+};
+
+/*
+    // Create secure cookie options
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "development",
+      //sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    };
+    */
+
 export const createUser = async (req, res) => {
   try {
     const { firstName, lastName, phone, username, email, password } = req.body;
@@ -39,6 +59,25 @@ export const createUser = async (req, res) => {
     let sanitizedPhone;
     let isValidPhone = true;
 
+    if (updates.phone) { // Check if phone exists before processing
+      const updatedPhone = updates.phone.trim();
+      sanitizedPhone = updatedPhone.toString().replace(/\D/g, "");
+    
+      // Validate length
+      if (sanitizedPhone.length !== 10) {
+        isValidPhone = false;
+        console.error("Invalid phone number length:", updates.phone);
+      }
+    
+      if (!isValidPhone) {
+        return res.status(400).json({
+          success: false,
+          message: "Phone number must be 10 digits",
+        });
+      }
+    }
+
+    /*
     // Convert to string and remove non-digits
     sanitizedPhone = String(phone).replace(/\D/g, "");
 
@@ -59,6 +98,7 @@ export const createUser = async (req, res) => {
         message: "Phone number must be 10 digits"
       });
     }
+    */
 
     // Perform asynchronous validation checks in parallel for faster response
     const [existingEmail, existingUsername, existingPhone] = await Promise.all([
@@ -122,14 +162,16 @@ export const createUser = async (req, res) => {
     const userData = await User.findById(newUser._id).select("-password -refreshToken");
 
     // Send response with tokens and user data
-    res.status(201).json({
-      success: true,
-      data: {
-        user: userData,
-        accessToken,
-      },
-      message: "User registered successfully",
-    });
+    res.status(201)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", refreshToken, cookieOptions)
+      .json({
+        success: true,
+        data: {
+          user: userData,
+        },
+        message: "User registered successfully",
+      });
 
   } catch (error) {
     // Handle MongoDB duplicate key error (race condition)
@@ -321,6 +363,158 @@ export const updateUser = async (req, res) => {
       return res.status(400).json({ success: false, message: error.message });
     }
     console.error("Error updating user:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: "Password is required",
+      });
+    }
+
+    // Find user by email or username
+    //refine the logic to find the user by email or username usnig Regex
+    const user = await User.findOne({
+      $or: [{ email }, { username: email }]
+    }).select("+password +refreshToken");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Verify password
+    const isPasswordValid = await user.isPasswordCorrect(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Wrong Password",
+      });
+    }
+
+    // Generate tokens
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    // Update refresh token in DB
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    // Send response
+    res.status(200)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", refreshToken, cookieOptions)
+      .json({
+        success: true,
+        data: {
+          user: {
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: user.role
+          }
+        },
+        message: "Login successful"
+      });
+
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+/*
+export const logoutUser = async (req, res) => {
+  try {
+    
+    // Get user ID from the authenticated request (set by verifyJWT middleware)
+    const userId = req.user?._id;
+
+    // Optionally clear refreshToken from the database
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      await User.findByIdAndUpdate(
+        userId,
+        { $unset: { refreshToken: 1 } }, // Remove refreshToken field
+        { new: true, runValidators: false }
+      );
+    }
+
+    //Send Response
+    res
+      .status(200)
+      .clearCookie("accessToken", { ...cookieOptions, maxAge: 0 })
+      .clearCookie("refreshToken", { ...cookieOptions, maxAge: 0 })
+      .json({
+        success: true,
+        message: "Logged out successfully",
+      });
+  } catch (error) {
+    console.error("Error during logout:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+*/
+
+export const logoutUser = async (req, res) => {
+  try {
+    // Ensure user is authenticated (from verifyJWT)
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - No user data found",
+      });
+    }
+
+    const userId = req.user._id;
+
+    // Clear refreshToken from the database (optional but recommended)
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      await User.findByIdAndUpdate(
+        userId,
+        { $unset: { refreshToken: 1 } }, // Remove refreshToken field
+        { new: true, runValidators: false }
+      );
+    } else {
+      console.warn("Invalid user ID:", userId);
+    }
+
+    // Clear cookies from the client's browser
+    res
+      .status(200)
+      .clearCookie("accessToken", { ...cookieOptions, maxAge: 0 })
+      .clearCookie("refreshToken", { ...cookieOptions, maxAge: 0 })
+      .json({
+        success: true,
+        data: null, // Consistent with other endpoints
+        message: "Logged out successfully",
+      });
+  } catch (error) {
+    console.error("Error during logout:", error); // Log full error for debugging
     res.status(500).json({
       success: false,
       message: "Internal server error",

@@ -6,10 +6,12 @@ import ProductCard from "../components/ProductCard";
 
 const HomePage = () => {
   const { fetchProducts, products } = useProductStore();
+  /*
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
   console.log(products);
+*/
 
   // Add this effect to handle external updates
   useEffect(() => {
@@ -18,7 +20,7 @@ const HomePage = () => {
   }, [fetchProducts]);
 
   return (
-    <Container maxW="container.xl" centerContent>
+    <Container maxW="container.xl" centerContent py={10}>
       <VStack spacing={8}>
         <Text
           fontSize={"30"}

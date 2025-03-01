@@ -1,59 +1,113 @@
-import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Container,
+  FormControl,
+  FormLabel,
+  Heading,
+  Input,
+  Text,
+  useToast,
+} from "@chakra-ui/react";
+import { Link, useNavigate } from "react-router-dom";
+import { useUserStore } from "../store/user";
+import React from "react";
 
 const LoginPage = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const history = useHistory();
+  const [credentials, setCredentials] = React.useState({
+    email: "",
+    password: "",
+  });
+  const toast = useToast();
+  const { login } = useUserStore();
+  const navigate = useNavigate(); 
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        // Add your login logic here
-        const response = await loginUser({ email, password });
-        if (response.success) {
-            history.push('/homepage');
-        } else {
-            alert('Login failed. Please check your credentials and try again.');
-        }
-    };
+  const handleLogin = async () => {
+    if (!credentials.email || !credentials.password) {
+      toast({
+        title: "Error",
+        description: "Please fill all fields",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
 
-    const loginUser = async (credentials) => {
-        // Replace with your actual login API call
-        return fetch('/api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(credentials),
-        }).then((data) => data.json());
-    };
+    try {
+      const { success, message } = await login(credentials);
 
-    return (
-        <div className="login-page">
-            <h2>Login</h2>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Email:</label>
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Password:</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                <button type="submit">Login</button>
-            </form>
-        </div>
-    );
+      toast({
+        title: success ? "Success" : "Error",
+        description: message,
+        status: success ? "success" : "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      
+      if (success) {
+        // Redirect to dashboard or home page
+        navigate("/");
+      }
+      
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Login failed",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  return (
+    <Container maxW="container.sm" py={10}>
+      <Box p={6} shadow="md" borderWidth={1} borderRadius={8}>
+        <Heading mb={6}>Login</Heading>
+        <FormControl mb={4}>
+          <FormLabel>Email or Username</FormLabel>
+          <Input
+            type="text"
+            value={credentials.email}
+            onChange={(e) =>
+              setCredentials({ ...credentials, email: e.target.value })
+            }
+          />
+        </FormControl>
+        <FormControl mb={6}>
+          <FormLabel>Password</FormLabel>
+          <Input
+            type="password"
+            value={credentials.password}
+            onChange={(e) =>
+              setCredentials({ ...credentials, password: e.target.value })
+            }
+          />
+        </FormControl>
+        <Button colorScheme="blue" onClick={handleLogin} width="full">
+          Login
+        </Button>
+        <Text
+          mt={4}
+          textAlign={"center"}
+          fontWeight="bold"
+          //color="gray.500"
+        >
+          Don&apos;t have an account?{" "}
+          <Link to={"/signup"}>
+            <Text
+              as="span"
+              color="blue.500"
+              _hover={{ textDecoration: "underline" }}
+            >
+              Sign Up
+            </Text>
+          </Link>
+        </Text>
+      </Box>
+    </Container>
+  );
 };
 
 export default LoginPage;

@@ -41,7 +41,7 @@ const SignupPage = () => {
   // Simplified phone validation
   const validatePhone = (phone) => {
     const cleaned = phone.replace(/\D/g, "");
-    if (cleaned.length !== 10) return "Phone must be 10 digits frontend";
+    if (cleaned.length !== 10) return "Phone must be 10 digits";
     if (!/^\d+$/.test(cleaned)) return "Only numbers allowed";
     return "";
   };
@@ -225,7 +225,7 @@ const SignupPage = () => {
   };
 
   return (
-    <Container maxW={"container.sm"}>
+    <Container maxW={"container.sm"} py={10}>
       <VStack spacing={8}>
         <Heading as={"h1"} size={"xl"} textAlign={"center"} mb={4}>
           CREATE ACCOUNT
@@ -316,7 +316,12 @@ const SignupPage = () => {
                 onChange={handleConfirmPasswordChange}
               />
               <InputRightElement width="4.5rem">
-                <Button h="1.75rem" size="sm" variant="ghost" onClick={handleShowPassword}>
+                <Button
+                  h="1.75rem"
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleShowPassword}
+                >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </Button>
               </InputRightElement>
@@ -345,15 +350,21 @@ const SignupPage = () => {
           >
             Reset
           </Button>
-          <Text textAlign="center">
+          <Text
+            mt={4}
+            textAlign={"center"}
+            fontWeight="bold"
+            //color="gray.500"
+          >
             Already have an account?{" "}
-            <Link
-              to="/login"
-              as="span"
-              color="blue.500"
-              _hover={{ textDecoration: "underline" }}
-            >
-              Log In
+            <Link to={"/login"}>
+              <Text
+                as="span"
+                color="blue.500"
+                _hover={{ textDecoration: "underline" }}
+              >
+                Log In
+              </Text>
             </Link>
           </Text>
         </VStack>

@@ -5,6 +5,7 @@ const REQUEST_TIMEOUT = 5000;
 
 export const useUserStore = create((set) => ({
     users: [],
+    user: null, // Add current user to state
     setUsers: (users) => set({ users }),
     createUser: async (newUser) => {
         try {
@@ -35,6 +36,7 @@ export const useUserStore = create((set) => ({
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newUser),
                     signal, // Pass the signal to the fetch request
+                    credentials: "include", // Important for sending/receiving cookies
                 });
 
                 clearTimeout(timeoutId); // Clear the timeout if the request completes
@@ -42,7 +44,7 @@ export const useUserStore = create((set) => ({
                 const data = await res.json();
 
                 if (res.ok) {
-                    set((state) => ({ users: [...state.users, data.data] }));
+                    set((state) => ({ users: [...state.users, data.data.user] }));
                     return { success: true, message: "User Created Successfully" };
                 } else {
                     // Handle HTTP errors
@@ -219,13 +221,18 @@ export const useUserStore = create((set) => ({
             return { success: false, message: "An unexpected error occurred. Please try again." };
         }
     },
+    */
     logout: async () => {
         try {
             const res = await fetch("/api/auth/logout", {
                 method: "POST",
+                credentials: "include",
             });
 
             if (res.ok) {
+                // Clear cookies and local state
+                document.cookie = "accessToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                document.cookie = "refreshToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
                 set({ user: null });
                 return { success: true, message: "Logged out successfully" };
             } else {
@@ -235,5 +242,52 @@ export const useUserStore = create((set) => ({
         } catch (error) {
             return { success: false, message: "An unexpected error occurred. Please try again." };
         }
-    },*/
+    },
+
+    login: async (credentials) => {
+        try {
+            const controller = new AbortController();
+            const { signal } = controller;
+            const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+            try {
+                const res = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(credentials),
+                    signal,
+                    credentials: "include" // For cookies
+                });
+
+                clearTimeout(timeoutId);
+                const data = await res.json();
+                console.log("Login response data:", data)
+
+                if (res.ok) {
+                    set({ user: data.data.user });
+                    return { success: true, message: "Logged in successfully" };
+                }
+                return { success: false, message: data.message || "Login failed" };
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (error.name === "AbortError") {
+                    return { success: false, message: "Login timed out" };
+                }
+                return { success: false, message: "Network error" };
+            }
+        } catch (error) {
+            return { success: false, message: "Login failed" };
+        }
+    },
+    /*
+    logout: async () => {
+        // Clear cookies and local state
+        document.cookie = "accessToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        document.cookie = "refreshToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        set({ user: null });
+        return { success: true, message: "Logged out" };
+    },
+    */
 }));

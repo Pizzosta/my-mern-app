@@ -35,6 +35,7 @@ export const useProductStore = create((set) => ({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newProduct),
                     signal, // Pass the signal to the fetch request
+                    credentials: "include", // Important for sending/receiving cookies
                 });
 
                 clearTimeout(timeoutId); // Clear the timeout if the request completes
@@ -78,20 +79,22 @@ export const useProductStore = create((set) => ({
 
             const data = await res.json();
             set({ products: data.data });
+
             /*
-                        const productsWithUsers = data.data.map(product => ({
-                            ...product,
-                            winner: product.winner ? {
-                                id: product.winner._id,
-                                username: product.winner.username
-                            } : null,
-                            seller: product.seller ? {
-                                id: product.seller._id,
-                                username: product.seller.username
-                            } : null
-                        }));
-                        set({ products: productsWithUsers});
-                        */
+            const data = await res.json();
+            const productsWithUsers = data.data.map(product => ({
+                ...product,
+                winner: product.winner ? {
+                    id: product.winner._id,
+                    username: product.winner.username
+                } : null,
+                seller: product.seller ? {
+                    id: product.seller._id,
+                    username: product.seller.username
+                } : null
+            }));
+            set({ products: productsWithUsers });
+*/
 
         } catch (error) {
             clearTimeout(timeoutId);
@@ -112,13 +115,17 @@ export const useProductStore = create((set) => ({
         const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
         try {
-            const res = await fetch(`/api/products/${id}`, { method: 'DELETE', signal });
+            const res = await fetch(`/api/products/${id}`, {
+                 method: 'DELETE', 
+                 signal,
+                 credentials: "include", // Important for sending/receiving cookies
+                });
 
             clearTimeout(timeoutId);
 
             const data = await res.json();
 
-            if (res.ok) {
+            if (res.ok) {//update the UI immediately without needing to refresh
                 set((state) => ({
                     products: state.products.filter((product) => product._id !== id),
                 }));
