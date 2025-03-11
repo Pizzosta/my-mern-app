@@ -9,8 +9,10 @@ import "@fontsource/poppins";
 import Footer from "./components/Footer";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
+import { useAuthCheck } from "./hooks/useAuthCheck";
 
 function App() {
+  useAuthCheck();
   return (
     <Box minH={"100vh"} bg={useColorModeValue("grey.100", "gray.900")}>
       <Navbar />

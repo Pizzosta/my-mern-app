@@ -92,7 +92,6 @@ const LoginPage = () => {
           mt={4}
           textAlign={"center"}
           fontWeight="bold"
-          //color="gray.500"
         >
           Don&apos;t have an account?{" "}
           <Link to={"/signup"}>

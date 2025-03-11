@@ -6,7 +6,17 @@ const REQUEST_TIMEOUT = 5000;
 export const useUserStore = create((set) => ({
     users: [],
     user: null, // Add current user to state
+    isAuthenticated: false,
+
+    // Set multiple users (for admin purposes)
     setUsers: (users) => set({ users }),
+
+    // Set current authenticated user
+    setUser: (userData) => set({
+        user: userData,
+        isAuthenticated: !!userData
+    }),
+
     createUser: async (newUser) => {
         try {
             // Validate fields
@@ -44,8 +54,12 @@ export const useUserStore = create((set) => ({
                 const data = await res.json();
 
                 if (res.ok) {
-                    set((state) => ({ users: [...state.users, data.data.user] }));
-                    return { success: true, message: "User Created Successfully" };
+                    set((state) => ({
+                        users: [...state.users, data.data.user],
+                        user: data.data.user,          // Set current user
+                        isAuthenticated: true          // Update auth status
+                    }));
+                    return { success: true, message: "User Created Successfully", user: data.data.user };
                 } else {
                     // Handle HTTP errors
                     return { success: false, message: data.message || "Failed to create user" };

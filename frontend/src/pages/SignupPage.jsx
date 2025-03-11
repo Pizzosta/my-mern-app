@@ -35,7 +35,7 @@ const SignupPage = () => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
 
-  const { createUser } = useUserStore(); // Destructure createUser from the store
+  const { createUser, setUser } = useUserStore(); // Destructure createUser from the store
   const navigate = useNavigate();
 
   // Simplified phone validation
@@ -113,7 +113,7 @@ const SignupPage = () => {
 
     setNewUser((prev) => ({
       ...prev,
-      phone: cleaned,
+      phone: cleaned, // Store as string
     }));
 
     // Real-time validation
@@ -178,12 +178,13 @@ const SignupPage = () => {
     try {
       const formattedUser = {
         ...newUser,
-        phone: parseFloat(newUser.phone),
+        phone: newUser.phone,
       };
 
-      const { success, message } = await createUser(formattedUser);
+      const { success, message, user: userData } = await createUser(formattedUser);
 
       if (success) {
+        setUser(userData); // Set user in store
         toast({
           title: "Success!",
           description: message,

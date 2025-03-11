@@ -14,9 +14,9 @@ const cookieOptions = {
     // Create secure cookie options
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "development",
-      //sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      //sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     };
     */
@@ -26,7 +26,7 @@ export const createUser = async (req, res) => {
     const { firstName, lastName, phone, username, email, password } = req.body;
 
     // Validate required fields
-    if (!firstName.trim() || !lastName.trim() || !phone || !username.trim() || !email.trim() || !password) {
+    if (!firstName?.trim() || !lastName?.trim() || !phone || !username?.trim() || !email.trim() || !password) {
       return res.status(400).json({
         success: false,
         message:
@@ -59,16 +59,17 @@ export const createUser = async (req, res) => {
     let sanitizedPhone;
     let isValidPhone = true;
 
-    if (updates.phone) { // Check if phone exists before processing
-      const updatedPhone = updates.phone.trim();
-      sanitizedPhone = updatedPhone.toString().replace(/\D/g, "");
-    
+    if (phone) { // Check if phone exists before processing
+      const updatedPhone = phone.toString().trim();
+      sanitizedPhone = updatedPhone.replace(/\D/g, "") // Remove non-digit characters
+        .slice(0, 10); // Ensure maximum 10 digits
+
       // Validate length
       if (sanitizedPhone.length !== 10) {
         isValidPhone = false;
-        console.error("Invalid phone number length:", updates.phone);
+        console.error("Invalid phone number length:", phone);
       }
-    
+
       if (!isValidPhone) {
         return res.status(400).json({
           success: false,
@@ -76,29 +77,6 @@ export const createUser = async (req, res) => {
         });
       }
     }
-
-    /*
-    // Convert to string and remove non-digits
-    sanitizedPhone = String(phone).replace(/\D/g, "");
-
-    // Add zero-padding if needed (optional safety)
-    if (sanitizedPhone.length === 9) {
-      sanitizedPhone = `0${sanitizedPhone}`;
-    }
-
-    // Validate length
-    if (sanitizedPhone.length !== 10) {
-      isValidPhone = false;
-      console.error("Invalid phone number length:", phone);
-    }
-
-    if (!isValidPhone) {
-      return res.status(400).json({
-        success: false,
-        message: "Phone number must be 10 digits"
-      });
-    }
-    */
 
     // Perform asynchronous validation checks in parallel for faster response
     const [existingEmail, existingUsername, existingPhone] = await Promise.all([
@@ -490,7 +468,8 @@ export const logoutUser = async (req, res) => {
       });
     }
 
-    const userId = req.user._id;
+    // Get user ID from the authenticated request (set by verifyJWT middleware)
+    const userId = req.user?._id;
 
     // Clear refreshToken from the database (optional but recommended)
     if (mongoose.Types.ObjectId.isValid(userId)) {
@@ -518,6 +497,30 @@ export const logoutUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Internal server error",
+    });
+  }
+};
+
+export const getCurrentUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .select("-password -refreshToken");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch user data"
     });
   }
 };
