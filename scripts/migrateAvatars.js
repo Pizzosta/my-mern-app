@@ -1,20 +1,43 @@
-const mongoose = require('mongoose');
-const User = require('../models/user.model');
+import mongoose from 'mongoose';
+import User from '../backend/models/user.model.js';
+import 'dotenv/config';
 
 async function migrateAvatars() {
-  await mongoose.connect(process.env.MONGO_URI);
-  
-  const users = await User.find({
-    profilePicture: { $exists: false }
-  });
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('Connected to MongoDB...');
 
-  for (const user of users) {
-    user.profilePicture = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.username)}`;
-    await user.save();
+    // Get all users regardless of validation
+    const users = await User.find();
+    console.log(`Found ${users.length} users to process`);
+
+    // Bulk update operation bypassing validation
+    const bulkOps = users.map(user => ({
+      updateOne: {
+        filter: { _id: user._id },
+        update: {
+          $set: {
+            profilePicture: `https://api.dicebear.com/7.x/initials/svg?seed=${
+              encodeURIComponent(user.username || 'user')
+            }`
+          }
+        }
+      }
+    }));
+
+    // Execute bulk write with validation bypass
+    const result = await User.bulkWrite(bulkOps, {
+      bypassDocumentValidation: true
+    });
+
+    console.log(`Migration complete! Updated ${result.modifiedCount} users`);
+    process.exit(0);
+  } catch (error) {
+    console.error('Migration failed:', error);
+    process.exit(1);
+  } finally {
+    await mongoose.disconnect();
   }
-
-  console.log(`Updated ${users.length} users`);
-  process.exit();
 }
 
 migrateAvatars();

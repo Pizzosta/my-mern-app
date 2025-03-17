@@ -295,6 +295,35 @@ export const useUserStore = create((set) => ({
             return { success: false, message: "Login failed" };
         }
     },
+
+    currentUser: async () => {
+        try {
+            const controller = new AbortController();
+            const { signal } = controller;
+            const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+    
+            const res = await fetch('/api/auth/me', {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                signal,
+                credentials: 'include'
+            });
+    
+            clearTimeout(timeoutId);
+            const data = await res.json();
+            console.log("Current User:", data);
+    
+            if (res.ok) {
+                set({ user: data.data.user });
+                return { success: true, message: "Current user fetched successfully" };
+            }
+            return { success: false, message: data.message || "Failed to fetch current user" };
+        } catch (error) {
+            return { success: false, message: "An unexpected error occurred. Please try again." };
+        }
+    },
     /*
     logout: async () => {
         // Clear cookies and local state

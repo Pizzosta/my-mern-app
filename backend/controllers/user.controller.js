@@ -304,7 +304,13 @@ export const updateUser = async (req, res) => {
       message: "User with this phone number already exists",
     });
   }
-
+  /*
+    // In updateUser controller
+  if (req.file) {
+    updates.profilePicture = `/uploads/${req.file.filename}`;
+  }
+  */
+ 
   // Remove _id and refreshToken from updates (important for security)
   delete updates._id;  // Prevent updating _id
   delete updates.refreshToken; // Prevent updating refreshToken
@@ -407,6 +413,7 @@ export const loginUser = async (req, res) => {
             _id: user._id,
             firstName: user.firstName,
             lastName: user.lastName,
+            username: user.username,
             email: user.email,
             role: user.role
           }
@@ -503,6 +510,14 @@ export const logoutUser = async (req, res) => {
 
 export const getCurrentUser = async (req, res) => {
   try {
+    // Ensure user is authenticated (from verifyJWT)
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - No user data found",
+      });
+    }
+
     const user = await User.findById(req.user._id)
       .select("-password -refreshToken");
 
