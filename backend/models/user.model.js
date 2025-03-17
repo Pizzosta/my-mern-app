@@ -34,6 +34,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
+      lowercase: true,
       index: true,
     },
     email: {
@@ -42,6 +43,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, "Please fill a valid email address"],
+      lowercase: true,
       index: true,
     },
     password: {
@@ -58,6 +60,14 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    profilePicture: {
+      type: String,
+      default: function () {
+        // Generate avatar URL using username
+        const username = this.username || 'user';
+        return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`;
+      }
+    }
   },
   { timestamps: true }
 );
@@ -95,6 +105,15 @@ userSchema.methods.generateRefreshToken = function () {
     { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
   );
 };
+
+// Avatar creation
+userSchema.pre('save', function(next) {
+  if (this.isModified('username') && this.profilePicture.includes('dicebear')) {
+    // Regenerate avatar if username changes and using default avatar
+    this.profilePicture = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(this.username)}`;
+  }
+  next();
+});
 
 const User = mongoose.model("User", userSchema);
 
