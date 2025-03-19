@@ -1,3 +1,4 @@
+/*
 import { create } from "zustand";
 
 // Define the timeout duration (5 seconds)
@@ -41,7 +42,7 @@ export const useUserStore = create((set) => ({
             }, REQUEST_TIMEOUT);
 
             try {
-                const res = await fetch("/api/users/signup", {
+                const res = await fetch("/api/auth/signup", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newUser),
@@ -186,151 +187,129 @@ export const useUserStore = create((set) => ({
         }
     },*/
 
-    /*login: async (credentials) => {
+
+import { create } from "zustand";
+
+const API_BASE = "/api/auth";
+const REQUEST_TIMEOUT = 10000; //10 secs
+
+export const useUserStore = create((set, get) => ({
+    user: null,
+    isAuthenticated: false,
+
+    setUser: (userData) => set({
+        user: userData,
+        isAuthenticated: !!userData
+    }),
+
+    // Unified API request handler
+    apiRequest: async (endpoint, method = "GET", body = null) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
         try {
-            // Validate fields
-            if (!credentials.email || !credentials.password) {
-                return { success: false, message: "Please provide all required fields" };
-            }
-
-            // Create an AbortController instance
-            const controller = new AbortController();
-            const { signal } = controller;
-
-            // Set a timeout to abort the fetch request if it takes too long
-            const timeoutId = setTimeout(() => {
-                controller.abort();
-            }, REQUEST_TIMEOUT);
-
-            try {
-                const res = await fetch("/api/auth/login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(credentials),
-                    signal, // Pass the signal to the fetch request
-                });
-
-                clearTimeout(timeoutId); // Clear the timeout if the request completes
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    set({ user: data.data });
-                    return { success: true, message: "Logged in successfully" };
-                } else {
-                    // Handle HTTP errors
-                    return { success: false, message: data.message || "Failed to login" };
-                }
-            } catch (error) {
-                clearTimeout(timeoutId); // Clear the timeout if an error occurs
-
-                if (error.name === "AbortError") {
-                    return { success: false, message: "Login request timed out. Please try again." };
-                } else {
-                    // Handle network errors
-                    return { success: false, message: "Network error. Please try again." };
-                }
-            }
-        } catch (error) {
-            return { success: false, message: "An unexpected error occurred. Please try again." };
-        }
-    },
-    */
-    logout: async () => {
-        try {
-            const res = await fetch("/api/auth/logout", {
-                method: "POST",
+            const res = await fetch(`${API_BASE}${endpoint}`, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: body ? JSON.stringify(body) : null,
+                signal: controller.signal,
                 credentials: "include",
             });
 
-            if (res.ok) {
-                // Clear cookies and local state
-                document.cookie = "accessToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-                document.cookie = "refreshToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-                set({ user: null });
-                return { success: true, message: "Logged out successfully" };
-            } else {
-                const data = await res.json();
-                return { success: false, message: data.message || "Failed to logout" };
+            clearTimeout(timeoutId);
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message || "Request failed");
             }
+            return data;
         } catch (error) {
-            return { success: false, message: "An unexpected error occurred. Please try again." };
+            clearTimeout(timeoutId);
+            if (error.name === "AbortError") {
+                console.error("Request aborted due to timeout");
+                throw new Error("Request timed out. Please try again.");
+            }
+            throw error; // Rethrow other errors
         }
     },
 
-    login: async (credentials) => {
+    createUser: async (newUser) => {
+        if (
+            !newUser.firstName ||
+            !newUser.lastName ||
+            !newUser.phone ||
+            !newUser.username ||
+            !newUser.email ||
+            !newUser.password
+        ) {
+            return { success: false, message: "Please provide all required fields" };
+        }
+
         try {
-            const controller = new AbortController();
-            const { signal } = controller;
-            const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
-
-            try {
-                const res = await fetch("/api/auth/login", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(credentials),
-                    signal,
-                    credentials: "include" // For cookies
-                });
-
-                clearTimeout(timeoutId);
-                const data = await res.json();
-                console.log("Login response data:", data)
-
-                if (res.ok) {
-                    set({ user: data.data.user });
-                    return { success: true, message: "Logged in successfully" };
-                }
-                return { success: false, message: data.message || "Login failed" };
-            } catch (error) {
-                clearTimeout(timeoutId);
-                if (error.name === "AbortError") {
-                    return { success: false, message: "Login timed out" };
-                }
-                return { success: false, message: "Network error" };
-            }
+            const data = await get().apiRequest("/signup", "POST", newUser);
+            set((state) => ({
+                ...state,
+                user: data.data.user,
+                isAuthenticated: true
+            }));
+            return { success: true, message: data.message || "User Created Successfully", data: { user: data.data.user } };
         } catch (error) {
-            return { success: false, message: "Login failed" };
+            return {
+                success: false,
+                message: error.message || "Failed to create user",
+            };
         }
     },
 
     currentUser: async () => {
         try {
-            const controller = new AbortController();
-            const { signal } = controller;
-            const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
-    
-            const res = await fetch('/api/auth/me', {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                signal,
-                credentials: 'include'
-            });
-    
-            clearTimeout(timeoutId);
-            const data = await res.json();
-            console.log("Current User:", data);
-    
-            if (res.ok) {
-                set({ user: data.data.user });
-                return { success: true, message: "Current user fetched successfully" };
-            }
-            return { success: false, message: data.message || "Failed to fetch current user" };
+            const data = await get().apiRequest("/me", "GET");
+            set((state) => ({
+                ...state,
+                user: data.data.user,
+                isAuthenticated: true
+            }));
+            return { success: true, message: data.message || "Current user fetched successfully", data: { user: data.data.user } };
         } catch (error) {
-            return { success: false, message: "An unexpected error occurred. Please try again." };
+            return {
+                success: false,
+                message: error.message || "Failed to fetch current user",
+            };
         }
     },
-    /*
-    logout: async () => {
-        // Clear cookies and local state
-        document.cookie = "accessToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-        document.cookie = "refreshToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-        set({ user: null });
-        return { success: true, message: "Logged out" };
+
+    login: async (credentials) => {
+        try {
+            const data = await get().apiRequest("/login", "POST", credentials);
+            set((state) => ({
+                ...state,
+                user: data.data.user,
+                isAuthenticated: true
+            }));
+            return { success: true, message: data.message || "Logged in successfully", data: { user: data.data.user } };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message || "Login failed",
+            };
+        }
     },
-    */
+
+    logout: async () => {
+        try {
+            const data = await get().apiRequest("/logout", "POST");
+            set((state) => ({
+                ...state,
+                user: null,
+                isAuthenticated: false
+            }));
+            return { success: true, message: data.message || "Logged out successfully", data: null };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message || "Logout failed",
+            };
+        }
+    },
 }));

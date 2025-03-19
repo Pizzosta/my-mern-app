@@ -1,55 +1,63 @@
-/*
-// Helper function to add virtuals to product data
-const formatProductWithVirtuals = (product) => ({
-  //...product,
-  ...product.toObject ? product.toObject() : product,
-  timeRemaining: product.timeRemaining
-  //seller: product.sellerDetails || null,
-  //winner: product.winnerDetails || null
-});
+import { create } from "zustand";
 
-export const getProducts = async (req, res) => {
-  try {
-    const products = await Product.find({}).sort({ createdAt: -1 })
-    /*.populate({
-        path: 'winnerDetails',
-        select: 'username email' // Only include necessary fields
-    })
-    .populate({
-        path: 'sellerDetails',
-        select: 'username email'
-    })
-    .lean({ virtuals: true });// Convert to plain JS objects & include virtuals
-*/
-    const formattedProducts = products.map(product => ({
-      //...product,
-      ...product.toObject(),
-      timeRemaining: product.timeRemaining,
-      status: product.status
-      // Remove manual timeRemaining assignment
-      //seller: product.sellerDetails || null,
-      //winner: product.winnerDetails || null
-    }));
+// Define the timeout duration (5 seconds)
+const REQUEST_TIMEOUT = 5000;
 
-    res.status(200).json({ success: true, data: formattedProducts });
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).json({ success: false, message: "Server Error" });
-  }
-};
-*/
+export const useUserStore = create((set) => ({
+  user: null,
+  isAuthenticated: false,
 
-/*
-                        const productsWithUsers = data.data.map(product => ({
-                            ...product,
-                            winner: product.winner ? {
-                                id: product.winner._id,
-                                username: product.winner.username
-                            } : null,
-                            seller: product.seller ? {
-                                id: product.seller._id,
-                                username: product.seller.username
-                            } : null
-                        }));
-                        set({ products: productsWithUsers});
-                        */
+  setUser: (userData) => set({
+    user: userData,
+    isAuthenticated: !!userData
+  }),
+
+  createUser: async (newUser) => {
+    if (
+      !newUser.firstName ||
+      !newUser.lastName ||
+      !newUser.phone ||
+      !newUser.username ||
+      !newUser.email ||
+      !newUser.password
+    ) {
+      return { success: false, message: "Please provide all required fields", user: null };
+    }
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+    try {
+      const res = await fetch("/api/users/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUser),
+        signal,
+        credentials: "include",
+      });
+
+      clearTimeout(timeoutId);
+      const data = res.ok || res.headers.get("content-type")?.includes("application/json")
+        ? await res.json()
+        : { message: "Unexpected server response" };
+
+      if (res.ok) {
+        set((state) => ({
+          ...state,
+          user: data.data.user,
+          isAuthenticated: true
+        }));
+        return { success: true, message: "User Created Successfully", user: data.data.user };
+      }
+      return { success: false, message: data.message || "Failed to create user", user: null };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === "AbortError") {
+        console.log("Request aborted due to timeout");
+        return { success: false, message: "Signup Request timed out. Please try again.", user: null };
+      }
+      return { success: false, message: "Network error. Please try again.", user: null };
+    }
+  },
+}));

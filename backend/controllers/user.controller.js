@@ -310,7 +310,7 @@ export const updateUser = async (req, res) => {
     updates.profilePicture = `/uploads/${req.file.filename}`;
   }
   */
- 
+
   // Remove _id and refreshToken from updates (important for security)
   delete updates._id;  // Prevent updating _id
   delete updates.refreshToken; // Prevent updating refreshToken
@@ -330,7 +330,7 @@ export const updateUser = async (req, res) => {
     }
     res.status(200).json({
       success: true,
-      data: updatedUser,
+      data: { user: updatedUser},
     });
   } catch (error) {
     // Handle MongoDB duplicate key
@@ -430,41 +430,6 @@ export const loginUser = async (req, res) => {
   }
 };
 
-/*
-export const logoutUser = async (req, res) => {
-  try {
-    
-    // Get user ID from the authenticated request (set by verifyJWT middleware)
-    const userId = req.user?._id;
-
-    // Optionally clear refreshToken from the database
-    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
-      await User.findByIdAndUpdate(
-        userId,
-        { $unset: { refreshToken: 1 } }, // Remove refreshToken field
-        { new: true, runValidators: false }
-      );
-    }
-
-    //Send Response
-    res
-      .status(200)
-      .clearCookie("accessToken", { ...cookieOptions, maxAge: 0 })
-      .clearCookie("refreshToken", { ...cookieOptions, maxAge: 0 })
-      .json({
-        success: true,
-        message: "Logged out successfully",
-      });
-  } catch (error) {
-    console.error("Error during logout:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
-*/
-
 export const logoutUser = async (req, res) => {
   try {
     // Ensure user is authenticated (from verifyJWT)
@@ -518,10 +483,10 @@ export const getCurrentUser = async (req, res) => {
       });
     }
 
-    const user = await User.findById(req.user._id)
+    const userData = await User.findById(req.user._id)
       .select("-password -refreshToken");
 
-    if (!user) {
+    if (!userData) {
       return res.status(404).json({
         success: false,
         message: "User not found"
@@ -530,7 +495,7 @@ export const getCurrentUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: user
+      data: { user: userData }
     });
   } catch (error) {
     res.status(500).json({
