@@ -28,7 +28,7 @@ export const useAuthCheck = () => {
   }, [setUser]);
 };
 */
-
+/*
 import { useEffect } from 'react';
 import { useUserStore } from '../store/user';
 
@@ -45,3 +45,26 @@ export const useAuthCheck = () => {
         checkAuth();
     }, [currentUser, setUser]);
 };
+*/
+
+import { useEffect } from 'react';
+import { useUserStore } from '../store/user';
+
+export const useAuthCheck = () => {
+  const currentUser = useUserStore(state => state.currentUser);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        await currentUser();
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+      }
+    };
+    initializeAuth();
+
+    // Optional: Periodic check every 15 minutes
+    const interval = setInterval(initializeAuth, 15 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [currentUser]);
+}

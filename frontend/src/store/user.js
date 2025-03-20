@@ -190,7 +190,8 @@ export const useUserStore = create((set) => ({
 
 import { create } from "zustand";
 
-const API_BASE = "/api/auth";
+const API_BASE = "/api/users";
+const AUTH_API_BASE = "/api/auth";
 const REQUEST_TIMEOUT = 10000; //10 secs
 
 export const useUserStore = create((set, get) => ({
@@ -203,12 +204,12 @@ export const useUserStore = create((set, get) => ({
     }),
 
     // Unified API request handler
-    apiRequest: async (endpoint, method = "GET", body = null) => {
+    apiRequest: async (endpoint, method = "GET", body = null, isAuthRoute = false, retry = true) => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
         try {
-            const res = await fetch(`${API_BASE}${endpoint}`, {
+            const res = await fetch(`${isAuthRoute ? AUTH_API_BASE : API_BASE}${endpoint}`, {
                 method,
                 headers: { "Content-Type": "application/json" },
                 body: body ? JSON.stringify(body) : null,
@@ -221,6 +222,17 @@ export const useUserStore = create((set, get) => ({
             const data = await res.json();
 
             if (!res.ok) {
+                if (res.status === 401 && retry && !endpoint.includes('/refresh')) {
+                    // Attempt token refresh
+                    const refreshData = await get().apiRequest('/refresh', 'POST', null, true, false);
+                    if (refreshData.success) {
+                        // Retry original request
+                        return get().apiRequest(endpoint, method, body, isAuthRoute, false);
+                    } else {
+                        get().setUser(null);
+                        throw new Error('Session expired. Please login.');
+                    }
+                }
                 throw new Error(data.message || "Request failed");
             }
             return data;
@@ -235,19 +247,24 @@ export const useUserStore = create((set, get) => ({
     },
 
     createUser: async (newUser) => {
-        if (
-            !newUser.firstName ||
-            !newUser.lastName ||
-            !newUser.phone ||
-            !newUser.username ||
-            !newUser.email ||
-            !newUser.password
-        ) {
-            return { success: false, message: "Please provide all required fields" };
+        const requiredFields = [
+            "firstName",
+            "lastName",
+            "phone",
+            "username",
+            "email",
+            "password",
+        ];
+
+        for (const field of requiredFields) {
+            if (!newUser[field]) {
+                return { success: false, message: `Missing required field: ${field}` };
+            }
         }
 
         try {
-            const data = await get().apiRequest("/signup", "POST", newUser);
+            // Set isAuthRoute to false to use API_BASE instead of AUTH_API_BASE
+            const data = await get().apiRequest("/signup", "POST", newUser, false);
             set((state) => ({
                 ...state,
                 user: data.data.user,
@@ -264,7 +281,7 @@ export const useUserStore = create((set, get) => ({
 
     currentUser: async () => {
         try {
-            const data = await get().apiRequest("/me", "GET");
+            const data = await get().apiRequest("/me", "GET", null, true);
             set((state) => ({
                 ...state,
                 user: data.data.user,
@@ -272,6 +289,7 @@ export const useUserStore = create((set, get) => ({
             }));
             return { success: true, message: data.message || "Current user fetched successfully", data: { user: data.data.user } };
         } catch (error) {
+            set({ user: null, isAuthenticated: false });
             return {
                 success: false,
                 message: error.message || "Failed to fetch current user",
@@ -281,7 +299,7 @@ export const useUserStore = create((set, get) => ({
 
     login: async (credentials) => {
         try {
-            const data = await get().apiRequest("/login", "POST", credentials);
+            const data = await get().apiRequest("/login", "POST", credentials, true);
             set((state) => ({
                 ...state,
                 user: data.data.user,
@@ -298,7 +316,7 @@ export const useUserStore = create((set, get) => ({
 
     logout: async () => {
         try {
-            const data = await get().apiRequest("/logout", "POST");
+            const data = await get().apiRequest("/logout", "POST", null, true);
             set((state) => ({
                 ...state,
                 user: null,

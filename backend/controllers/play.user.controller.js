@@ -1,6 +1,5 @@
 import User from "../models/user.model.js";
 import mongoose from "mongoose";
-import jwt from "jsonwebtoken";
 
 // Define cookie options at module scope
 // Updated cookie options for local development
@@ -8,7 +7,7 @@ const cookieOptions = {
   httpOnly: true,
   secure: false, // Disable secure in development (HTTP)
   sameSite: 'lax', // Less strict than 'strict'
-  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  maxAge: 7 * 24 * 60 * 60 * 1000
 };
 
 /*
@@ -56,6 +55,7 @@ export const createUser = async (req, res) => {
 
     const sanitizedUsername = new RegExp(`^${username.trim()}$`, "i"); //( Try: username.trim().toLowerCase(); // Trim and convert to lowercase)
 
+    /*
     // Phone validation
     let sanitizedPhone;
     let isValidPhone = true;
@@ -77,6 +77,20 @@ export const createUser = async (req, res) => {
           message: "Phone number must be 10 digits",
         });
       }
+    }
+    */
+
+    // Phone validation
+    if (phone) {
+      const updatedPhone = phone.toString().trim();
+      sanitizedPhone = updatedPhone.replace(/\D/g, ""); // Remove non-digit characters
+      if (sanitizedPhone.length !== 10) {
+        return res.status(400).json({
+          success: false,
+          message: "Phone number must be exactly 10 digits",
+        });
+      }
+      sanitizedPhone = sanitizedPhone.slice(0, 10); // Ensure maximum 10 digits
     }
 
     // Perform asynchronous validation checks in parallel for faster response
@@ -136,7 +150,6 @@ export const createUser = async (req, res) => {
     // Update refreshToken and save in a single operation into the Database
     await User.findByIdAndUpdate(newUser._id, { refreshToken }, { new: true, runValidators: false });
 
-
     // Omit sensitive data from the response
     const userData = await User.findById(newUser._id).select("-password -refreshToken");
 
@@ -175,9 +188,9 @@ export const createUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const usersData = await User.find({}).sort({ createdAt: -1 }); // Find all users (empty object {} means no filter)
+    const users = await User.find({}).sort({ createdAt: -1 }); // Find all users (empty object {} means no filter)
 
-    if (!usersData) {
+    if (!users) {
       return res.status(404).json({
         success: false,
         message: "No users found", // Or perhaps just an empty array is fine
@@ -186,7 +199,7 @@ export const getAllUsers = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: { users: usersData }
+      data: users,
     });
   } catch (error) {
     console.error("Error getting all users:", error);
@@ -331,7 +344,7 @@ export const updateUser = async (req, res) => {
     }
     res.status(200).json({
       success: true,
-      data: { user: updatedUser},
+      data: { user: updatedUser },
     });
   } catch (error) {
     // Handle MongoDB duplicate key
@@ -503,41 +516,5 @@ export const getCurrentUser = async (req, res) => {
       success: false,
       message: "Failed to fetch user data"
     });
-  }
-};
-
-export const refreshAccessToken = async (req, res) => {
-  try {
-    const incomingRefreshToken = req.cookies.refreshToken;
-
-    if (!incomingRefreshToken) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
-    }
-
-    const decoded = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
-    const user = await User.findById(decoded?._id);
-
-    if (!user || incomingRefreshToken !== user?.refreshToken) {
-      return res.status(401).json({ success: false, message: "Invalid refresh token" });
-    }
-
-    const newAccessToken = user.generateAccessToken();
-    const newRefreshToken = user.generateRefreshToken();
-
-    user.refreshToken = newRefreshToken;
-    await user.save({ validateBeforeSave: false });
-
-    res
-      .cookie("accessToken", newAccessToken, cookieOptions)
-      .cookie("refreshToken", newRefreshToken, cookieOptions)
-      .status(200)
-      .json({
-        success: true,
-        data: { accessToken: newAccessToken },
-        message: "Tokens refreshed",
-      });
-  } catch (error) {
-    console.error("Refresh token error:", error);
-    res.status(401).json({ success: false, message: "Invalid refresh token" });
   }
 };
