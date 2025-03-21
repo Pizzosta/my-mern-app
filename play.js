@@ -1,142 +1,105 @@
-import { create } from "zustand";
+export const updateUser = async (req, res) => {
+  upload(req, res, async (err) => {
+    if (err) return handleMulterError(err, req, res);
 
-const API_BASE = "/api/auth";
-const REQUEST_TIMEOUT = 5000;
+    const { id } = req.params;
+    const updates = req.body;
 
-export const useUserStore = create((set, get) => ({
-  user: null,
-  isAuthenticated: false,
-
-  setUser: (userData) => set({
-    user: userData,
-    isAuthenticated: !!userData,
-  }),
-
-  // Unified API request handler
-  apiRequest: async (endpoint, method = "GET", body = null) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid User ID" });
+    }
 
     try {
-      const res = await fetch(`${API_BASE}${endpoint}`, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: body ? JSON.stringify(body) : null,
-        signal: controller.signal,
-        credentials: "include",
+      // Handle phone validation if provided
+      if (updates.phone) {
+        const sanitizedPhone = updates.phone.toString().trim().replace(/\D/g, "").slice(0, 10);
+        if (sanitizedPhone.length !== 10) {
+          return res.status(400).json({ success: false, message: "Phone number must be 10 digits" });
+        }
+        updates.phone = sanitizedPhone;
+      }
+
+      // Email validation
+      const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+      if (updates.email && !emailRegex.test(updates.email.trim())) {
+        return res.status(400).json({
+          success: false,
+          message: "Please fill a valid email address",
+        });
+      }
+
+      const sanitizedEmail = updates.email ? new RegExp(`^${updates.email.trim()}$`, "i") : null;
+      const sanitizedUsername = updates.username ? new RegExp(`^${updates.username.trim()}$`, "i") : null;
+
+      // Run all the queries in parallel using Promise.all
+      // Conditional async checks for existing email, username, and phone
+      const [existingEmail, existingUsername, existingPhone] = await Promise.all(
+        sanitizedEmail
+          ? User.findOne({ email: sanitizedEmail, _id: { $ne: id } }).catch((error) => handleQueryError(error, "email"))
+          : null,
+        sanitizedUsername
+          ? User.findOne({ username: sanitizedUsername, _id: { $ne: id } }).catch((error) => handleQueryError(error, "username"))
+          : null,
+        updates.phone
+          ? User.findOne({ phone: updates.phone, _id: { $ne: id } }).catch((error) => handleQueryError(error, "phone"))
+          : null
+      );
+
+      function handleQueryError(error, queryType) {
+        console.error(`Error during user check (${queryType}):`, error);
+        return null;
+      }
+
+      // Check if any of the validations failed
+      if (existingEmail) {
+        return res.status(409).json({ success: false, message: "User with this email already exists" });
+      }
+
+      if (existingUsername) {
+        return res.status(409).json({ success: false, message: "User with this username already exists" });
+      }
+
+      if (existingPhone) {
+        return res.status(409).json({ success: false, message: "User with this phone number already exists" });
+      }
+
+      // Add profile picture if uploaded
+      if (req.file) {
+        updates.profilePicture = `/uploads/${req.file.filename}`;
+      }
+
+      delete updates._id;
+      delete updates.refreshToken;
+
+      // Proceed with your update logic here
+      const updatedUser = await User.findByIdAndUpdate(
+        id,
+        { $set: updates },
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+
+      res.status(200).json({
+        success: true,
+        data: { user: updatedUser },
       });
-
-      clearTimeout(timeoutId);
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Request failed");
+    } catch (error) {
+      if (error.code === 11000) {
+        const duplicateKey = Object.keys(error.keyValue)[0];
+        return res.status(409).json({
+          success: false,
+          message: `User with this ${duplicateKey} (${error.keyValue[duplicateKey]}) already exists`,
+        });
       }
-      return data;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      if (error.name === "AbortError") {
-        throw new Error("Request timed out. Please try again.");
+      if (error.name === "ValidationError") {
+        const errorMessages = Object.values(error.errors).map((err) => err.message);
+        return res.status(400).json({ success: false, message: errorMessages.join(", ") });
       }
-      throw error;
+      console.error("Error updating user:", error);
+      res.status(500).json({ success: false, message: "Internal server error" });
     }
-  },
-
-  createUser: async (newUser) => {
-    if (
-      !newUser.firstName ||
-      !newUser.lastName ||
-      !newUser.phone ||
-      !newUser.username ||
-      !newUser.email ||
-      !newUser.password
-    ) {
-      return {
-        success: false,
-        message: "Please provide all required fields",
-      };
-    }
-
-    try {
-      const data = await get().apiRequest("/signup", "POST", newUser);
-      set((state) => ({
-        ...state,
-        user: data.data.user,
-        isAuthenticated: true,
-      }));
-      return {
-        success: true,
-        message: data.message || "User created successfully",
-        data: { user: data.data.user },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || "Failed to create user",
-      };
-    }
-  },
-
-  currentUser: async () => {
-    try {
-      const data = await get().apiRequest("/me", "GET");
-      set((state) => ({
-        ...state,
-        user: data.data.user,
-        isAuthenticated: true,
-      }));
-      return {
-        success: true,
-        message: data.message || "Current user fetched successfully",
-        data: { user: data.data.user },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || "Failed to fetch current user",
-      };
-    }
-  },
-
-  login: async (credentials) => {
-    try {
-      const data = await get().apiRequest("/login", "POST", credentials);
-      set((state) => ({
-        ...state,
-        user: data.data.user,
-        isAuthenticated: true,
-      }));
-      return {
-        success: true,
-        message: data.message || "Logged in successfully",
-        data: { user: data.data.user },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || "Login failed",
-      };
-    }
-  },
-
-  logout: async () => {
-    try {
-      const data = await get().apiRequest("/logout", "POST");
-      set((state) => ({
-        ...state,
-        user: null,
-        isAuthenticated: false,
-      }));
-      return {
-        success: true,
-        message: data.message || "Logged out successfully",
-        data: null,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || "Logout failed",
-      };
-    }
-  },
-}));
+  });
+};

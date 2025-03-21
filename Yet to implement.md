@@ -35,4 +35,6 @@ Price isnt working on the update card
 
 we need to validate the entire ()update product page) product card
 
-createpage "textarea"
+"2025-03-30T15:01:00.000Z" does not conform to the required format. frontend create products when clicked on dates
+
+Use a global loading state on useAuthCheck()

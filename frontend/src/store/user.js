@@ -209,10 +209,14 @@ export const useUserStore = create((set, get) => ({
         const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
         try {
+            const isFileUpload = body instanceof FormData;
+            const headers = isFileUpload ? {} : { "Content-Type": "application/json" };
+            const requestBody = isFileUpload ? body : body ? JSON.stringify(body) : null;
+
             const res = await fetch(`${isAuthRoute ? AUTH_API_BASE : API_BASE}${endpoint}`, {
                 method,
-                headers: { "Content-Type": "application/json" },
-                body: body ? JSON.stringify(body) : null,
+                headers,
+                body: requestBody,
                 signal: controller.signal,
                 credentials: "include",
             });
@@ -246,7 +250,7 @@ export const useUserStore = create((set, get) => ({
         }
     },
 
-    createUser: async (newUser) => {
+    createUser: async (newUser, profilePictureFile) => {
         const requiredFields = [
             "firstName",
             "lastName",
@@ -263,8 +267,16 @@ export const useUserStore = create((set, get) => ({
         }
 
         try {
+            const formData = new FormData();
+            for (const key in newUser) {
+                formData.append(key, newUser[key]);
+            }
+            if (profilePictureFile) {
+                formData.append("profilePicture", profilePictureFile);
+            }
+
             // Set isAuthRoute to false to use API_BASE instead of AUTH_API_BASE
-            const data = await get().apiRequest("/signup", "POST", newUser, false);
+            const data = await get().apiRequest("/signup", "POST", formData, false);
             set((state) => ({
                 ...state,
                 user: data.data.user,
@@ -327,6 +339,42 @@ export const useUserStore = create((set, get) => ({
             return {
                 success: false,
                 message: error.message || "Logout failed",
+            };
+        }
+    },
+
+    // Update a user by ID
+    updateUser: async (userId, updates, profilePictureFile) => {
+        if (!userId) {
+            return { success: false, message: "User ID is required" };
+        }
+        if (!updates || Object.keys(updates).length === 0 && !profilePictureFile) {
+            return { success: false, message: "No updates provided" };
+        }
+
+        try {
+            const formData = new FormData();
+            for (const key in updates) {
+              formData.append(key, updates[key]);
+            }
+            if (profilePictureFile) {
+              formData.append("profilePicture", profilePictureFile);
+            }
+
+            const data = await get().apiRequest(`/${userId}`, "PUT", formData, false);
+            // If the current user is updated, update the state
+            if (get().user?._id === userId) {
+                set((state) => ({
+                    ...state,
+                    user: data.data.user,
+                    isAuthenticated: true
+                }));
+            }
+            return { success: true, message: data.message || "User updated successfully", data: { user: data.data.user } };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.message || "Failed to update user",
             };
         }
     },
